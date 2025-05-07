@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+  <div class="p-4 bg-primary text-white">
+    <h2 class="text-xl font-semibold">AgriBot Assistant</h2>
+    <p class="text-sm">Ask me anything about GMOs and agricultural products</p>
+  </div>
+  
+  <div class="chat-container overflow-y-auto custom-scrollbar p-4 h-96">
+    <!-- AI Welcome Message -->
+    <div class="flex gap-3 mb-6">
+      <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-primary/10 text-primary rounded-full mt-1">
+        <i class="ri-robot-line"></i>
+      </div>
+      <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-[80%]">
+        <p class="text-gray-800">
+          Hello! I'm your AgriBot assistant. How can I help you with
+          GMO information or product verification today?
+        </p>
+      </div>
+    </div>
+    
+    <!-- Chat messages will appear here -->
+    <div id="chat-messages">
+      {% for message in request.user.chatmessage_set.all|slice:":5" %}
+      <!-- User Message -->
+      <div class="flex gap-3 mb-6 justify-end">
+        <div class="bg-primary text-white rounded-lg rounded-tr-none p-3 max-w-[80%]">
+          <p>{{ message.message }}</p>
+        </div>
+        <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-gray-200 rounded-full mt-1">
+          <i class="ri-user-3-line text-gray-700"></i>
+        </div>
+      </div>
+      
+      <!-- AI Response -->
+      <div class="flex gap-3 mb-6">
+        <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-primary/10 text-primary rounded-full mt-1">
+          <i class="ri-robot-line"></i>
+        </div>
+        <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-[80%]">
+          <p class="text-gray-800">{{ message.response }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    
+    <!-- Quick Suggestions -->
+    <div id="quick-suggestions" class="flex flex-wrap gap-2 mb-6 pl-11">
+      <button onclick="sendSuggestion(this)" class="bg-white border border-gray-200 hover:border-primary text-gray-700 px-3 py-1.5 rounded-full text-sm whitespace-nowrap">
+        GMO regulations
+      </button>
+      <button onclick="sendSuggestion(this)" class="bg-white border border-gray-200 hover:border-primary text-gray-700 px-3 py-1.5 rounded-full text-sm whitespace-nowrap">
+        Verified corn seeds
+      </button>
+      <button onclick="sendSuggestion(this)" class="bg-white border border-gray-200 hover:border-primary text-gray-700 px-3 py-1.5 rounded-full text-sm whitespace-nowrap">
+        Benefits of GMO crops
+      </button>
+    </div>
+  </div>
+  
+  <div class="p-3 border-t border-gray-100">
+    <div class="relative">
+      <input
+        id="user-input"
+        type="text"
+        class="w-full pl-4 pr-16 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+        placeholder="Type your question about GMOs..."
+        onkeypress="handleKeyPress(event)"
+      />
+      <div class="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+        <button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary">
+          <i class="ri-image-add-line"></i>
+        </button>
+        <button onclick="sendMessage()" class="w-8 h-8 flex items-center justify-center bg-primary text-white rounded-full">
+          <i class="ri-send-plane-fill"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function sendMessage() {
+    const input = document.getElementById('user-input');
+    const message = input.value.trim();
+    if (!message) return;
+    
+    // Add user message to chat
+    addMessage(message, 'user');
+    input.value = '';
+    
+    // Send to server
+    fetch('/api/agriculture-chat/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({message: message})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.response) {
+            addMessage(data.response, 'bot');
+            updateSuggestions(data.suggestions);
+        }
+    });
+}
+
+function sendSuggestion(button) {
+    document.getElementById('user-input').value = button.textContent;
+    sendMessage();
+}
+
+function handleKeyPress(e) {
+    if (e.key === 'Enter') sendMessage();
+}
+
+function addMessage(text, sender) {
+    const chat = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    
+    if (sender === 'user') {
+        messageDiv.className = 'flex gap-3 mb-6 justify-end';
+        messageDiv.innerHTML = `
+            <div class="bg-primary text-white rounded-lg rounded-tr-none p-3 max-w-[80%]">
+                <p>${text}</p>
+            </div>
+            <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-gray-200 rounded-full mt-1">
+                <i class="ri-user-3-line text-gray-700"></i>
+            </div>
+        `;
+    } else {
+        messageDiv.className = 'flex gap-3 mb-6';
+        messageDiv.innerHTML = `
+            <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-primary/10 text-primary rounded-full mt-1">
+                <i class="ri-robot-line"></i>
+            </div>
+            <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-[80%]">
+                <p class="text-gray-800">${text}</p>
+            </div>
+        `;
+    }
+    
+    chat.appendChild(messageDiv);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function updateSuggestions(suggestions) {
+    const container = document.getElementById('quick-suggestions');
+    container.innerHTML = '';
+    
+    suggestions.forEach(suggestion => {
+        const button = document.createElement('button');
+        button.className = 'bg-white border border-gray-200 hover:border-primary text-gray-700 px-3 py-1.5 rounded-full text-sm whitespace-nowrap';
+        button.textContent = suggestion;
+        button.onclick = function() { sendSuggestion(this); };
+        container.appendChild(button);
+    });
+}
+</script>
+
+<style>
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+</style>
+{% endblock %}
