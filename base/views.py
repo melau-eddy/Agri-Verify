@@ -28,7 +28,7 @@ def chat_view(request):
     """Render the agriculture chat template"""
     # Get last 5 messages for the current user
     recent_messages = ChatMessage.objects.filter(user=request.user).order_by('-created_at')[:5]
-    return render(request, 'agriculture_chat.html', {
+    return render(request, 'home.html', {
         'recent_messages': recent_messages
     })
 
@@ -114,3 +114,85 @@ def register(request):
 
     return render(request, "register.html")
 
+def details(request):
+    return render(request, 'details.html')
+
+
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from .models import EducationalVideo, VerifiedProduct, GovernmentApproval
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+def home_page(request):
+    # Get featured video
+    featured_video = EducationalVideo.objects.filter(
+        related_approval__status='approved'
+    ).first()
+    
+    # Get related videos (excluding featured)
+    related_videos = EducationalVideo.objects.exclude(
+        id=featured_video.id if featured_video else None
+    ).filter(
+        related_approval__status='approved'
+    )[:3]
+    
+    # Get verified products
+    verified_products = VerifiedProduct.objects.filter(
+        approval__status='approved'
+    )[:3]
+    
+    context = {
+        'featured_video': featured_video,
+        'related_videos': related_videos,
+        'verified_products': verified_products,
+    }
+    return render(request, 'home.html', context)
+
+@csrf_exempt
+def verify_product(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            code = data.get('code', '').strip()
+            
+            product = VerifiedProduct.objects.get(
+                approval__approval_id=code
+            )
+            
+            approval = product.approval
+            
+            return JsonResponse({
+                'status': 'success',
+                'product': {
+                    'name': product.name,
+                    'type': product.get_product_type_display(),
+                    'manufacturer': product.manufacturer,
+                    'image_url': product.image.url if product.image else None,
+                    'description': product.description,
+                    'traits': product.gmo_traits,
+                },
+                'approval': {
+                    'id': approval.approval_id,
+                    'status': approval.get_status_display(),
+                    'body': approval.approving_body,
+                    'date': approval.approval_date.strftime('%Y-%m-%d') if approval.approval_date else None,
+                    'expiry': approval.expiry_date.strftime('%Y-%m-%d') if approval.expiry_date else None,
+                    'risk': approval.risk_level,
+                    'conditions': approval.conditions
+                },
+                'is_approved': approval.status == 'approved',
+            })
+            
+        except VerifiedProduct.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'No product found with this approval ID'
+            }, status=404)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)

@@ -41,3 +41,30 @@ class ChatMessageAdmin(admin.ModelAdmin):
     
     # Order by most recent first by default
     ordering = ('-created_at',)
+
+
+from django.contrib import admin
+from .models import GovernmentApproval, EducationalVideo, VerifiedProduct
+
+@admin.register(GovernmentApproval)
+class GovernmentApprovalAdmin(admin.ModelAdmin):
+    list_display = ('approval_id', 'approving_body', 'status', 'approval_date', 'risk_level')
+    list_filter = ('status', 'approving_body')
+    search_fields = ('approval_id', 'approving_body')
+    readonly_fields = ('approval_id',)
+
+@admin.register(EducationalVideo)
+class EducationalVideoAdmin(admin.ModelAdmin):
+    list_display = ('title', 'source', 'duration', 'related_approval')
+    list_filter = ('source', 'related_approval__approving_body')
+    search_fields = ('title', 'description')
+
+@admin.register(VerifiedProduct)
+class VerifiedProductAdmin(admin.ModelAdmin):
+    list_display = ('name', 'manufacturer', 'product_type', 'approval_status')
+    list_filter = ('product_type', 'approval__status')
+    search_fields = ('name', 'manufacturer', 'approval__approval_id')
+    
+    def approval_status(self, obj):
+        return obj.approval.get_status_display()
+    approval_status.short_description = 'Approval Status'
