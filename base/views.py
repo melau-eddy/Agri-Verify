@@ -124,34 +124,45 @@ from .models import EducationalVideo, VerifiedProduct, GovernmentApproval
 
 
 def home_page(request):
-    # Get approved videos (prefetch related approval to reduce queries)
-    approved_videos = EducationalVideo.objects.select_related('related_approval').filter(
-        Q(related_approval__status='approved') | Q(related_approval__isnull=True),
-        video_file__isnull=False
-    ).order_by('-created_at')
-    
-    # Get featured video (first approved video or most recent if none specified)
-    featured_video = approved_videos.first()
-    
-    # Get related videos (excluding featured, limited to 3)
-    related_videos = approved_videos.exclude(
-        id=featured_video.id if featured_video else None
-    )[:3]
-    
-    # Get verified products with their approval (prefetch to reduce queries)
-    verified_products = VerifiedProduct.objects.select_related('approval').filter(
-        approval__status='approved',
-        image__isnull=False
-    ).order_by('-date_added')[:3]
-    
-    context = {
-        'featured_video': featured_video,
-        'related_videos': related_videos,
-        'verified_products': verified_products,
-    }
-    return render(request, 'home.html', context)
+    try:
+        # Get approved videos
+        approved_videos = EducationalVideo.objects.select_related('related_approval').filter(
+            Q(related_approval__status='approved') | Q(related_approval__isnull=True),
+            video_file__isnull=False
+        ).order_by('-created_at')
+        
+        featured_video = approved_videos.first()
+        
+        # Debug output
+        print(f"Featured Video: {featured_video}")
+        if featured_video:
+            print(f"Video File: {featured_video.video_file}")
+            print(f"Video URL: {featured_video.video_file.url}")
 
-
+        related_videos = approved_videos.exclude(
+            id=featured_video.id if featured_video else None
+        )[:3]
+        
+        verified_products = VerifiedProduct.objects.select_related('approval').filter(
+            approval__status='approved',
+            image__isnull=False
+        ).order_by('-date_added')[:3]
+        
+        context = {
+            'featured_video': featured_video,
+            'related_videos': related_videos,
+            'verified_products': verified_products,
+            'debug': True  # Add this for template debugging
+        }
+        return render(request, 'home.html', context)
+        
+    except Exception as e:
+        print(f"Error in home_page view: {str(e)}")
+        # Fallback context if there's an error
+        return render(request, 'home.html', {
+            'error': str(e),
+            'debug': True
+        })
 
 @csrf_exempt
 def verify_product(request):

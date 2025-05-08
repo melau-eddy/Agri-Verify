@@ -94,9 +94,7 @@ class EducationalVideo(models.Model):
     def video_url(self):
         return self.video_file.url if self.video_file else None
     
-    @property
-    def thumbnail_url(self):
-        return self.thumbnail.url if self.thumbnail else None
+    
 
 class VerifiedProduct(models.Model):
     PRODUCT_TYPES = [
