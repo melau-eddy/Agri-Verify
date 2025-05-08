@@ -1,10 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from transformers import pipeline
 from .models import ChatMessage
 import json
+from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -118,29 +119,30 @@ def details(request):
     return render(request, 'details.html')
 
 
-from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from .models import EducationalVideo, VerifiedProduct, GovernmentApproval
-from django.views.decorators.csrf import csrf_exempt
-import json
+
 
 def home_page(request):
-    # Get featured video
-    featured_video = EducationalVideo.objects.filter(
-        related_approval__status='approved'
-    ).first()
+    # Get approved videos (prefetch related approval to reduce queries)
+    approved_videos = EducationalVideo.objects.select_related('related_approval').filter(
+        Q(related_approval__status='approved') | Q(related_approval__isnull=True),
+        video_file__isnull=False
+    ).order_by('-created_at')
     
-    # Get related videos (excluding featured)
-    related_videos = EducationalVideo.objects.exclude(
+    # Get featured video (first approved video or most recent if none specified)
+    featured_video = approved_videos.first()
+    
+    # Get related videos (excluding featured, limited to 3)
+    related_videos = approved_videos.exclude(
         id=featured_video.id if featured_video else None
-    ).filter(
-        related_approval__status='approved'
     )[:3]
     
-    # Get verified products
-    verified_products = VerifiedProduct.objects.filter(
-        approval__status='approved'
-    )[:3]
+    # Get verified products with their approval (prefetch to reduce queries)
+    verified_products = VerifiedProduct.objects.select_related('approval').filter(
+        approval__status='approved',
+        image__isnull=False
+    ).order_by('-date_added')[:3]
     
     context = {
         'featured_video': featured_video,
@@ -148,6 +150,8 @@ def home_page(request):
         'verified_products': verified_products,
     }
     return render(request, 'home.html', context)
+
+
 
 @csrf_exempt
 def verify_product(request):

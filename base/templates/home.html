@@ -96,7 +96,7 @@
           {% if featured_video %}
           <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-4">
             <video id="mainVideo" class="w-full h-full object-cover" preload="metadata">
-              <source src="{{ featured_video.video_url }}" type="video/mp4">
+              <source src="{{ featured_video.video_file.url }}" type="video/mp4">
               Your browser does not support the video tag.
             </video>
             <div id="videoOverlay" class="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer">
@@ -135,9 +135,15 @@
           <h3 class="font-medium mb-3">Related Videos</h3>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {% for video in related_videos %}
-            <div class="group cursor-pointer" onclick="changeVideo('{{ video.video_url }}', '{{ video.title }}', '{{ video.duration }}', '{{ video.source }}')">
+            <div class="group cursor-pointer" onclick="changeVideo('{{ video.video_file.url }}', '{{ video.title }}', '{{ video.duration }}', '{{ video.source }}')">
               <div class="relative aspect-video bg-gray-200 rounded-lg overflow-hidden mb-2">
-                <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="w-full h-full object-cover">
+                {% if video.thumbnail %}
+                <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" class="w-full h-full object-cover">
+                {% else %}
+                <div class="w-full h-full bg-gray-300 flex items-center justify-center">
+                  <i class="ri-video-line text-4xl text-gray-500"></i>
+                </div>
+                {% endif %}
                 <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <i class="ri-play-fill ri-2x text-white"></i>
                 </div>
@@ -150,8 +156,71 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Right Column - Verification Tools & Products -->
+    <!-- ... rest of your existing right column content ... -->
+  </div>
+</div>
+
+<script>
+// Video Player Functionality
+const mainVideo = document.getElementById('mainVideo');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const videoProgress = document.getElementById('videoProgress');
+const timeDisplay = document.getElementById('timeDisplay');
+const bigPlayButton = document.getElementById('bigPlayButton');
+const videoOverlay = document.getElementById('videoOverlay');
+
+function togglePlay() {
+  if (mainVideo.paused) {
+    mainVideo.play();
+    playPauseBtn.innerHTML = '<i class="ri-pause-fill ri-lg"></i>';
+    bigPlayButton.classList.add('hidden');
+    videoOverlay.classList.add('hidden');
+  } else {
+    mainVideo.pause();
+    playPauseBtn.innerHTML = '<i class="ri-play-fill ri-lg"></i>';
+  }
+}
+
+function changeVideo(videoUrl, title, duration, source) {
+  mainVideo.src = videoUrl;
+  document.querySelector('.absolute.bottom-0 h3').textContent = title;
+  document.querySelector('.absolute.bottom-0 p').textContent = `${duration} • ${source}`;
+  
+  // Reset player state
+  mainVideo.load();
+  playPauseBtn.innerHTML = '<i class="ri-play-fill ri-lg"></i>';
+  videoProgress.value = 0;
+  timeDisplay.textContent = '0:00 / 0:00';
+  bigPlayButton.classList.remove('hidden');
+  videoOverlay.classList.remove('hidden');
+}
+
+mainVideo.addEventListener('timeupdate', function() {
+  const percent = (mainVideo.currentTime / mainVideo.duration) * 100;
+  videoProgress.value = percent;
+  
+  const currentTime = formatTime(mainVideo.currentTime);
+  const totalTime = formatTime(mainVideo.duration);
+  timeDisplay.textContent = `${currentTime} / ${totalTime}`;
+});
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+// Click overlay to play
+videoOverlay.addEventListener('click', togglePlay);
+
+// Click video to toggle play/pause
+mainVideo.addEventListener('click', togglePlay);
+</script>
+
+
+<!-- Right Column - Verification Tools & Products -->
     <div class="lg:w-1/3">
       <!-- QR Scanner Section -->
       <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
