@@ -9,6 +9,8 @@ from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.utils import timezone
+
 
 # Initialize the AI model (agriculture-focused)
 agriculture_qa = pipeline(
@@ -211,3 +213,21 @@ def verify_product(request):
             }, status=500)
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
+
+from django.http import Http404
+from .models import Webinar
+
+def webinar_redirect(request):
+    try:
+        # Get the latest active webinar
+        webinar = Webinar.objects.filter(
+            is_active=True,
+            scheduled_time__gte=timezone.now()  # Only future webinars
+        ).latest('scheduled_time')
+        return redirect(webinar.zoom_registration_url)
+    
+    except Webinar.DoesNotExist:
+        # Fallback URL if no webinars exist
+        return redirect('https://zoom.us/webinars')  # Or a custom "no webinars" page

@@ -2,7 +2,23 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import FileExtensionValidator
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
+import uuid
 
+class Webinar(models.Model):
+    title = models.CharField(max_length=200, help_text="Name of the webinar")
+    description = models.TextField(blank=True, null=True)
+    zoom_registration_url = models.URLField(help_text="Zoom registration link")
+    scheduled_time = models.DateTimeField(help_text="When the webinar starts")
+    is_active = models.BooleanField(default=True, help_text="Is registration open?")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-scheduled_time']  # Newest first
+
+    def __str__(self):
+        return f"{self.title} ({self.scheduled_time})"
 
 
 class ChatMessage(models.Model):
@@ -32,7 +48,7 @@ class GovernmentApproval(models.Model):
     status = models.CharField(max_length=20, choices=APPROVAL_STATUS, default='pending')
     approval_date = models.DateField(null=True, blank=True)
     expiry_date = models.DateField(null=True, blank=True)
-    approval_id = models.CharField(max_length=50, unique=True)
+    approval_id = models.CharField(max_length=50, default=uuid.uuid4, help_text="Leave blank to auto-generate", unique=True)
     approving_body = models.CharField(max_length=200)
     risk_level = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],

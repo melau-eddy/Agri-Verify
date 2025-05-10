@@ -1,5 +1,13 @@
 from django.contrib import admin
 from .models import ChatMessage
+from .models import Webinar
+
+@admin.register(Webinar)
+class WebinarAdmin(admin.ModelAdmin):
+    list_display = ('title', 'scheduled_time', 'is_active')
+    list_filter = ('is_active', 'scheduled_time')
+    search_fields = ('title', 'description')
+    date_hierarchy = 'scheduled_time'
 
 @admin.register(ChatMessage)
 class ChatMessageAdmin(admin.ModelAdmin):
