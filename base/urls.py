@@ -1,13 +1,19 @@
 from django.urls import path
-from .views import chat_api, chat_view
-from .import views
+from . import views
 
 urlpatterns = [
-    path('', views.home_page, name='home'),
-    path('api/agriculture-chat/', chat_api, name='agriculture_chat_api'),
+    path('', views.dashboard, name='dashboard'),
+    path('verify-product/', views.verify_product, name='verify_product'),
+    path('filter-products/', views.filter_products, name='filter_products'),
     path('login/', views.login_view, name='login_view'),
     path('register/', views.register, name='register'),
-    path('details/', views.details, name='details'),
-    path('verify/', views.verify_product, name='verify_product'),
+    path('logout/', views.logout_view, name='logout_view'),
+    path('chat/api/', views.chat_api, name='chat_api'),
     path('webinars/', views.webinar_redirect, name='webinars'),
+
+    path('product/<int:pk>/', views.ProductDetailView.as_view(), name='product_detail'),
+    path('api/products/<int:product_id>/verify/', views.verify_product, name='verify_product'),
+
+
+
 ]
