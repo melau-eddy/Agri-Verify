@@ -122,254 +122,254 @@
   <!-- Footer -->
  
 
-  <script>
-      // Quiz Data
-      const quizData = [
-          {
-              question: "Are GMOs grown for commercial in the Kenya?",
-              options: ["Yes", "No"],
-              answer: "Yes",
-              explanation: "Currently in Kenya, GMOs are grown at a commercial scale. Example Bt Cotton which has been grown since 2020."
-          },
-          {
-              question: "Which of the following crop is cleared for cultivation and commercialization in Kenya?",
-              options: ["Wheat", "Cotton", "Beans"],
-              answer: "Cotton",
-              explanation: ""
-          },
-          {
-              question: "Why is Cotton Genetically Modified in Kenya?",
-              options: ["Pest Resistant", "Increase Food Security", "Increase quality"],
-              answer: "Pest Resistant",
-              explanation: "For pest Resistance- Bt cotton is the available Modified cotton in Kenya. It is resistant against African Bollworm (Which is the most destructive pest in cotton)."
-          },
-          {
-              question: "Can GMOs grow big overnight?",
-              options: ["Yes", "No"],
-              answer: "No",
-              explanation: "The available GMOs are from germination not induced when the crop has fruited."
-          },
-          {
-              question: "Which Body is responsible for regulating GMOs in Kenya?",
-              options: [
-                  "Kenya Bureau of Standards (KEBS)",
-                  "National Biosafety Authority (NBA)",
-                  "Anti-counterfeit Agency (ACA)",
-                  "Kenya Agricultural and Livestock Research Organization (KALRO)"
-              ],
-              answer: "National Biosafety Authority (NBA)",
-              explanation: "Although all the above organizations are core at monitoring GMOs, NBA is the organization mandated to regulate GMOs under Biosafety act 2009."
-          },
-          {
-              question: "At what age should a person start consuming GMO?",
-              options: ["Below 5 years", "Above 18 years", "Any age"],
-              answer: "Any age",
-              explanation: "For GMOs products they are tested for all individuals regardless of age, race, social status."
-          },
-          {
-              question: "Do Genetically Modified Products cause cancer?",
-              options: ["Yes", "No"],
-              answer: "No",
-              explanation: "From the research done on the topic, GMOs do not cause cancer. Before release for commercialization, the product should prove beyond doubt that they have negative health effects. This include proving that the products do not cause tumors."
-          },
-          {
-              question: "Does the court ban a person from buying or consuming GMOs?",
-              options: ["Yes", "No"],
-              answer: "No",
-              explanation: "The Kenyan High Court Uplifted the ban against GMOs in 2024 after an existing 10 year ban. The court allowed for cultivation of GMOs in the cultivation."
-          },
-          {
-              question: "Which amongst the following is banned in regards to GMOs in Kenya?",
-              options: ["Cultivation", "Consumption", "Importation", "Commercialization"],
-              answer: "Importation",
-              explanation: "This follows the ruling by the Court of Appeal to bar the government from importing GMOs."
-          },
-          {
-              question: "Are there Genetically Modified Mosquitoes in Kenya natural environment?",
-              options: ["Yes", "No"],
-              answer: "No",
-              explanation: "Genetically Modified Mosquitoes are strictly done in the laboratory not open in the environment."
-          }
-      ];
+   <script>
+        // Quiz Data
+        const quizData = [
+            {
+                question: "Are GMOs grown for commercial in the Kenya?",
+                options: ["Yes", "No"],
+                answer: "Yes",
+                explanation: "Currently in Kenya, GMOs are grown at a commercial scale. Example Bt Cotton which has been grown since 2020."
+            },
+            {
+                question: "Which of the following crop is cleared for cultivation and commercialization in Kenya?",
+                options: ["Wheat", "Cotton", "Beans"],
+                answer: "Cotton",
+                explanation: ""
+            },
+            {
+                question: "Why is Cotton Genetically Modified in Kenya?",
+                options: ["Pest Resistant", "Increase Food Security", "Increase quality"],
+                answer: "Pest Resistant",
+                explanation: "For pest Resistance- Bt cotton is the available Modified cotton in Kenya. It is resistant against African Bollworm (Which is the most destructive pest in cotton)."
+            },
+            {
+                question: "Can GMOs grow big overnight?",
+                options: ["Yes", "No"],
+                answer: "No",
+                explanation: "The available GMOs are from germination not induced when the crop has fruited."
+            },
+            {
+                question: "Which Body is responsible for regulating GMOs in Kenya?",
+                options: [
+                    "Kenya Bureau of Standards (KEBS)",
+                    "National Biosafety Authority (NBA)",
+                    "Anti-counterfeit Agency (ACA)",
+                    "Kenya Agricultural and Livestock Research Organization (KALRO)"
+                ],
+                answer: "National Biosafety Authority (NBA)",
+                explanation: "Although all the above organizations are core at monitoring GMOs, NBA is the organization mandated to regulate GMOs under Biosafety act 2009."
+            },
+            {
+                question: "At what age should a person start consuming GMO?",
+                options: ["Below 5 years", "Above 18 years", "Any age"],
+                answer: "Any age",
+                explanation: "For GMOs products they are tested for all individuals regardless of age, race, social status."
+            },
+            {
+                question: "Do Genetically Modified Products cause cancer?",
+                options: ["Yes", "No"],
+                answer: "No",
+                explanation: "From the research done on the topic, GMOs do not cause cancer. Before release for commercialization, the product should prove beyond doubt that they have negative health effects. This include proving that the products do not cause tumors."
+            },
+            {
+                question: "Does the court ban a person from buying or consuming GMOs?",
+                options: ["Yes", "No"],
+                answer: "No",
+                explanation: "The Kenyan High Court Uplifted the ban against GMOs in 2024 after an existing 10 year ban. The court allowed for cultivation of GMOs in the cultivation."
+            },
+            {
+                question: "Which amongst the following is banned in regards to GMOs in Kenya?",
+                options: ["Cultivation", "Consumption", "Importation", "Commercialization"],
+                answer: "Importation",
+                explanation: "This follows the ruling by the Court of Appeal to bar the government from importing GMOs."
+            },
+            {
+                question: "Are there Genetically Modified Mosquitoes in Kenya natural environment?",
+                options: ["Yes", "No"],
+                answer: "No",
+                explanation: "Genetically Modified Mosquitoes are strictly done in the laboratory not open in the environment."
+            }
+        ];
 
-      // DOM Elements
-      const questionText = document.getElementById('question-text');
-      const optionsContainer = document.getElementById('options-container');
-      const feedbackSection = document.getElementById('feedback-section');
-      const feedbackTitle = document.getElementById('feedback-title');
-      const feedbackText = document.getElementById('feedback-text');
-      const feedbackIcon = document.getElementById('feedback-icon');
-      const nextButton = document.getElementById('next-button');
-      const progressBar = document.getElementById('progress');
-      const currentQuestionDisplay = document.getElementById('current-question');
-      const streakDisplay = document.getElementById('streak');
-      const questionCard = document.getElementById('question-card');
-      const correctAnswerContainer = document.getElementById('correct-answer-container');
-      const correctAnswerDisplay = document.getElementById('correct-answer');
-      const heart1 = document.getElementById('heart1');
-      const heart2 = document.getElementById('heart2');
-      const heart3 = document.getElementById('heart3');
+        // DOM Elements
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackSection = document.getElementById('feedback-section');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackText = document.getElementById('feedback-text');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const nextButton = document.getElementById('next-button');
+        const progressBar = document.getElementById('progress');
+        const currentQuestionDisplay = document.getElementById('current-question');
+        const streakDisplay = document.getElementById('streak');
+        const questionCard = document.getElementById('question-card');
+        const correctAnswerContainer = document.getElementById('correct-answer-container');
+        const correctAnswerDisplay = document.getElementById('correct-answer');
+        const heart1 = document.getElementById('heart1');
+        const heart2 = document.getElementById('heart2');
+        const heart3 = document.getElementById('heart3');
 
-      // Quiz State
-      let currentQuestionIndex = 0;
-      let score = 0;
-      let lives = 3;
-      let streak = 0;
-      let answeredCorrectly = false;
+        // Quiz State
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let lives = 3;
+        let streak = 0;
+        let answeredCorrectly = false;
 
-      // Initialize the quiz
-      function initQuiz() {
-          showQuestion();
-          updateHearts();
-      }
+        // Initialize the quiz
+        function initQuiz() {
+            showQuestion();
+            updateHearts();
+        }
 
-      // Display the current question
-      function showQuestion() {
-          const question = quizData[currentQuestionIndex];
-          questionText.textContent = question.question;
-          
-          // Clear previous options
-          optionsContainer.innerHTML = '';
-          
-          // Add new options
-          question.options.forEach((option, index) => {
-              const optionElement = document.createElement('button');
-              optionElement.className = 'option w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center';
-              optionElement.innerHTML = `
-                  <span class="w-6 h-6 rounded-full bg-white flex items-center justify-center mr-3">${String.fromCharCode(65 + index)}</span>
-                  ${option}
-              `;
-              optionElement.addEventListener('click', () => selectOption(option));
-              optionsContainer.appendChild(optionElement);
-          });
-          
-          // Update progress
-          currentQuestionDisplay.textContent = currentQuestionIndex + 1;
-          progressBar.style.width = `${((currentQuestionIndex + 1) / quizData.length) * 100}%`;
-          
-          // Reset UI for new question
-          feedbackSection.classList.add('hidden');
-          correctAnswerContainer.classList.add('hidden');
-          questionCard.classList.remove('hidden');
-          questionCard.classList.add('pulse');
-      }
+        // Display the current question
+        function showQuestion() {
+            const question = quizData[currentQuestionIndex];
+            questionText.textContent = question.question;
+            
+            // Clear previous options
+            optionsContainer.innerHTML = '';
+            
+            // Add new options
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('button');
+                optionElement.className = 'option w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center';
+                optionElement.innerHTML = `
+                    <span class="w-6 h-6 rounded-full bg-white flex items-center justify-center mr-3">${String.fromCharCode(65 + index)}</span>
+                    ${option}
+                `;
+                optionElement.addEventListener('click', () => selectOption(option));
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // Update progress
+            currentQuestionDisplay.textContent = currentQuestionIndex + 1;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / quizData.length) * 100}%`;
+            
+            // Reset UI for new question
+            feedbackSection.classList.add('hidden');
+            correctAnswerContainer.classList.add('hidden');
+            questionCard.classList.remove('hidden');
+            questionCard.classList.add('pulse');
+        }
 
-      // Update heart display
-      function updateHearts() {
-          heart1.style.opacity = lives >= 1 ? "1" : "0.3";
-          heart2.style.opacity = lives >= 2 ? "1" : "0.3";
-          heart3.style.opacity = lives >= 3 ? "1" : "0.3";
-      }
+        // Update heart display
+        function updateHearts() {
+            heart1.style.opacity = lives >= 1 ? "1" : "0.3";
+            heart2.style.opacity = lives >= 2 ? "1" : "0.3";
+            heart3.style.opacity = lives >= 3 ? "1" : "0.3";
+        }
 
-      // Handle option selection
-      function selectOption(selectedOption) {
-          const question = quizData[currentQuestionIndex];
-          const options = document.querySelectorAll('.option');
-          
-          // Disable all options
-          options.forEach(option => {
-              option.disabled = true;
-          });
-          
-          // Check if answer is correct
-          if (selectedOption === question.answer) {
-              // Correct answer
-              answeredCorrectly = true;
-              streak++;
-              streakDisplay.textContent = streak;
-              score++;
-              
-              // Highlight correct option
-              options.forEach(option => {
-                  if (option.textContent.includes(question.answer)) {
-                      option.classList.add('correct');
-                  }
-              });
-              
-              // Show feedback
-              showFeedback(true, question.explanation);
-          } else {
-              // Incorrect answer
-              answeredCorrectly = false;
-              streak = 0;
-              streakDisplay.textContent = streak;
-              lives--;
-              updateHearts();
-              
-              // Highlight correct and incorrect options
-              options.forEach(option => {
-                  if (option.textContent.includes(question.answer)) {
-                      option.classList.add('correct');
-                  } else if (option.textContent.includes(selectedOption)) {
-                      option.classList.add('incorrect');
-                  }
-              });
-              
-              // Show feedback with correct answer
-              showFeedback(false, question.explanation);
-              correctAnswerContainer.classList.remove('hidden');
-              correctAnswerDisplay.textContent = question.answer;
-          }
-          
-          // Remove pulse animation
-          questionCard.classList.remove('pulse');
-      }
+        // Handle option selection
+        function selectOption(selectedOption) {
+            const question = quizData[currentQuestionIndex];
+            const options = document.querySelectorAll('.option');
+            
+            // Disable all options
+            options.forEach(option => {
+                option.disabled = true;
+            });
+            
+            // Check if answer is correct
+            if (selectedOption === question.answer) {
+                // Correct answer
+                answeredCorrectly = true;
+                streak++;
+                streakDisplay.textContent = streak;
+                score++;
+                
+                // Highlight correct option
+                options.forEach(option => {
+                    if (option.textContent.trim().includes(question.answer)) {
+                        option.classList.add('correct');
+                    }
+                });
+                
+                // Show feedback
+                showFeedback(true, question.explanation);
+            } else {
+                // Incorrect answer
+                answeredCorrectly = false;
+                streak = 0;
+                streakDisplay.textContent = streak;
+                lives--;
+                updateHearts();
+                
+                // Highlight correct and incorrect options
+                options.forEach(option => {
+                    if (option.textContent.trim().includes(question.answer)) {
+                        option.classList.add('correct');
+                    } else if (option.textContent.trim().includes(selectedOption)) {
+                        option.classList.add('incorrect');
+                    }
+                });
+                
+                // Show feedback with correct answer
+                showFeedback(false, question.explanation);
+                correctAnswerContainer.classList.remove('hidden');
+                correctAnswerDisplay.textContent = question.answer;
+            }
+            
+            // Remove pulse animation
+            questionCard.classList.remove('pulse');
+        }
 
-      // Show feedback after answering
-      function showFeedback(isCorrect, explanation) {
-          if (isCorrect) {
-              feedbackTitle.textContent = "Correct!";
-              feedbackText.textContent = explanation;
-              feedbackIcon.className = "w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mr-3 text-white";
-              feedbackIcon.innerHTML = '<i class="fas fa-check"></i>';
-          } else {
-              feedbackTitle.textContent = "Incorrect";
-              feedbackText.textContent = explanation;
-              feedbackIcon.className = "w-10 h-10 rounded-full bg-red-500 flex items-center justify-center mr-3 text-white";
-              feedbackIcon.innerHTML = '<i class="fas fa-times"></i>';
-          }
-          
-          questionCard.classList.add('hidden');
-          feedbackSection.classList.remove('hidden');
-      }
+        // Show feedback after answering
+        function showFeedback(isCorrect, explanation) {
+            if (isCorrect) {
+                feedbackTitle.textContent = "Correct!";
+                feedbackText.textContent = explanation;
+                feedbackIcon.className = "w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mr-3 text-white";
+                feedbackIcon.innerHTML = '<i class="fas fa-check"></i>';
+            } else {
+                feedbackTitle.textContent = "Incorrect";
+                feedbackText.textContent = explanation;
+                feedbackIcon.className = "w-10 h-10 rounded-full bg-red-500 flex items-center justify-center mr-3 text-white";
+                feedbackIcon.innerHTML = '<i class="fas fa-times"></i>';
+            }
+            
+            questionCard.classList.add('hidden');
+            feedbackSection.classList.remove('hidden');
+        }
 
-      // Move to next question or show results
-      nextButton.addEventListener('click', () => {
-          currentQuestionIndex++;
-          
-          if (currentQuestionIndex < quizData.length && lives > 0) {
-              showQuestion();
-          } else {
-              // Quiz completed
-              showResults();
-          }
-      });
+        // Move to next question or show results
+        nextButton.addEventListener('click', () => {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < quizData.length && lives > 0) {
+                showQuestion();
+            } else {
+                // Quiz completed
+                showResults();
+            }
+        });
 
-      // Show final results
-      function showResults() {
-          questionCard.classList.add('hidden');
-          feedbackSection.classList.remove('hidden');
-          
-          feedbackTitle.textContent = "Quiz Completed!";
-          feedbackText.textContent = `You scored ${score} out of ${quizData.length} questions correctly.`;
-          feedbackIcon.className = "w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center mr-3 text-white";
-          feedbackIcon.innerHTML = '<i class="fas fa-trophy"></i>';
-          
-          nextButton.textContent = "Restart Quiz";
-          nextButton.addEventListener('click', () => {
-              currentQuestionIndex = 0;
-              score = 0;
-              lives = 3;
-              streak = 0;
-              streakDisplay.textContent = streak;
-              updateHearts();
-              initQuiz();
-          }, { once: true });
-      }
+        // Show final results
+        function showResults() {
+            questionCard.classList.add('hidden');
+            feedbackSection.classList.remove('hidden');
+            
+            feedbackTitle.textContent = "Quiz Completed!";
+            feedbackText.textContent = `You scored ${score} out of ${quizData.length} questions correctly.`;
+            feedbackIcon.className = "w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center mr-3 text-white";
+            feedbackIcon.innerHTML = '<i class="fas fa-trophy"></i>';
+            
+            nextButton.textContent = "Restart Quiz";
+            nextButton.addEventListener('click', () => {
+                currentQuestionIndex = 0;
+                score = 0;
+                lives = 3;
+                streak = 0;
+                streakDisplay.textContent = streak;
+                updateHearts();
+                initQuiz();
+            }, { once: true });
+        }
 
-      // Start the quiz
-      initQuiz();
-  </script>
+        // Start the quiz
+        initQuiz();
+    </script>
 </body>
 
 {% endblock %}
