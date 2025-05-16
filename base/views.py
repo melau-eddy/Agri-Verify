@@ -363,3 +363,6 @@ def verify_product(request, product_id):
             'success': False,
             'error': 'Product not found'
         }, status=404)
+
+def quiz(request):
+    return render(request, 'quiz.html')
