@@ -1,123 +1,127 @@
 {% extends 'base.html' %}
 
 {% block content %}
- <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f5f7fa;
-        }
-        
-        .progress-bar {
-            transition: width 0.5s ease-in-out;
-        }
-        
-        .option:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .correct {
-            background-color: #4CAF50 !important;
-            color: white !important;
-        }
-        
-        .incorrect {
-            background-color: #F44336 !important;
-            color: white !important;
-        }
-        
-        .pulse {
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        .streak-counter {
-            background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 50%, #FF8E53 100%);
-        }
-        
-        .correct-answer {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
-            display: inline-block;
-        }
-    </style>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f5f7fa;
+    }
+    
+    .progress-bar {
+        transition: width 0.5s ease-in-out;
+    }
+    
+    .option:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .correct {
+        background-color: #4CAF50 !important;
+        color: white !important;
+    }
+    
+    .incorrect {
+        background-color: #F44336 !important;
+        color: white !important;
+    }
+    
+    .pulse {
+        animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .streak-counter {
+        background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 50%, #FF8E53 100%);
+    }
+    
+    .correct-answer {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 10px;
+        display: inline-block;
+    }
+</style>
+</head>
 <body class="min-h-screen flex flex-col">
-  <!-- Header -->
-  <header class="bg-green-600 text-white shadow-lg">
-      <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div class="flex items-center space-x-2">
-              <i class="fas fa-leaf text-2xl"></i>
-              <h1 class="text-xl font-bold">GMO Kenya Quiz</h1>
-          </div>
-          
-      </div>
-  </header>
+<!-- Header -->
+<header class="bg-green-600 text-white shadow-lg">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-leaf text-2xl"></i>
+            <h1 class="text-xl font-bold">GMO Kenya Quiz</h1>
+        </div>
+        <div class="streak-counter px-3 py-1 rounded-full text-white font-bold flex items-center">
+            <i class="fas fa-bolt mr-1"></i>
+            <span id="streak">0</span>
+        </div>
+    </div>
+</header>
 
-  <!-- Main Content -->
-  <main class="flex-grow container mx-auto px-4 py-8">
-      <!-- Progress Bar -->
-      <div class="mb-8">
-          <div class="flex justify-between mb-2">
-              <span class="text-sm font-medium text-gray-700">Progress</span>
-              <span class="text-sm font-medium text-gray-700"><span id="current-question">1</span>/10</span>
-          </div>
-          <div class="w-full bg-gray-200 rounded-full h-2.5">
-              <div id="progress" class="progress-bar bg-green-600 h-2.5 rounded-full" style="width: 10%"></div>
-          </div>
-      </div>
+<!-- Main Content -->
+<main class="flex-grow container mx-auto px-4 py-8">
+    <!-- Progress Bar -->
+    <div class="mb-8">
+        <div class="flex justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">Progress</span>
+            <span class="text-sm font-medium text-gray-700"><span id="current-question">1</span>/10</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div id="progress" class="progress-bar bg-green-600 h-2.5 rounded-full" style="width: 10%"></div>
+        </div>
+    </div>
 
-      <!-- Question Card -->
-      <div id="question-card" class="bg-white rounded-xl shadow-lg p-6 mb-8 transition-all duration-300 pulse">
-          <div class="flex items-center mb-4">
-              <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-3">
-                  <i class="fas fa-question"></i>
-              </div>
-              <h2 id="question-text" class="text-xl font-semibold text-gray-800">Are GMOs grown for commercial in the Kenya?</h2>
-          </div>
-          
-          <!-- Options Container -->
-          <div id="options-container" class="space-y-3">
-              <!-- Options will be inserted here by JavaScript -->
-          </div>
-      </div>
+    <!-- Question Card -->
+    <div id="question-card" class="bg-white rounded-xl shadow-lg p-6 mb-8 transition-all duration-300 pulse">
+        <div class="flex items-center mb-4">
+            <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-3">
+                <i class="fas fa-question"></i>
+            </div>
+            <h2 id="question-text" class="text-xl font-semibold text-gray-800">Are GMOs grown for commercial in the Kenya?</h2>
+        </div>
+        
+        <!-- Options Container -->
+        <div id="options-container" class="space-y-3">
+            <!-- Options will be inserted here by JavaScript -->
+        </div>
+    </div>
 
-      <!-- Feedback Section (Initially Hidden) -->
-      <div id="feedback-section" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div class="flex items-start mb-4">
-              <div id="feedback-icon" class="w-10 h-10 rounded-full flex items-center justify-center mr-3 text-white">
-                  <i class="fas fa-check"></i>
-              </div>
-              <div>
-                  <h3 id="feedback-title" class="text-lg font-semibold">Correct!</h3>
-                  <p id="feedback-text" class="text-gray-600">Currently in Kenya, GMOs are grown at a commercial scale. Example Bt Cotton which has been grown since 2020.</p>
-                  <div id="correct-answer-container" class="mt-3 hidden">
-                      <p class="font-medium text-gray-700">The correct answer was:</p>
-                      <div id="correct-answer" class="correct-answer"></div>
-                  </div>
-              </div>
-          </div>
-          <button id="next-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
-              Continue <i class="fas fa-arrow-right ml-2"></i>
-          </button>
-      </div>
+    <!-- Feedback Section (Initially Hidden) -->
+    <div id="feedback-section" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div class="flex items-start mb-4">
+            <div id="feedback-icon" class="w-10 h-10 rounded-full flex items-center justify-center mr-3 text-white">
+                <i class="fas fa-check"></i>
+            </div>
+            <div>
+                <h3 id="feedback-title" class="text-lg font-semibold">Correct!</h3>
+                <p id="feedback-text" class="text-gray-600">Currently in Kenya, GMOs are grown at a commercial scale. Example Bt Cotton which has been grown since 2020.</p>
+                <div id="correct-answer-container" class="mt-3 hidden">
+                    <p class="font-medium text-gray-700">The correct answer was:</p>
+                    <div id="correct-answer" class="correct-answer"></div>
+                </div>
+            </div>
+        </div>
+        <button id="next-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+            Continue <i class="fas fa-arrow-right ml-2"></i>
+        </button>
+    </div>
 
-      <!-- Hearts (Lives) -->
-      <div class="flex justify-center space-x-4 mb-8">
-          <i id="heart1" class="fas fa-heart text-red-500 text-2xl"></i>
-          <i id="heart2" class="fas fa-heart text-red-500 text-2xl"></i>
-          <i id="heart3" class="fas fa-heart text-red-500 text-2xl"></i>
-      </div>
-  </main>
+    <!-- Hearts (Lives) -->
+    <div class="flex justify-center space-x-4 mb-8">
+        <i id="heart1" class="fas fa-heart text-red-500 text-2xl"></i>
+        <i id="heart2" class="fas fa-heart text-red-500 text-2xl"></i>
+        <i id="heart3" class="fas fa-heart text-red-500 text-2xl"></i>
+    </div>
+</main>
 
   <!-- Footer -->
  
