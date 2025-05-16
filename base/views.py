@@ -14,6 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 import openai
 from django.views.generic import DetailView
 import requests  
+from django.utils import timezone
 
 
 
