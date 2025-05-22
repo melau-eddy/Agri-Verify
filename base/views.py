@@ -21,7 +21,7 @@ import requests
 @login_required
 def dashboard(request):
     # Get latest chat messages (last 10)
-    chat_messages = ChatMessage.objects.filter(user=request.user).order_by('-created_at')[:10]
+    chat_messages = ChatMessage.objects.filter(user=request.user).order_by('-created_at')[:10]  
     
     # Get video resources - first one is featured, next 3 are related
     video_resources = EducationalResource.objects.filter(
