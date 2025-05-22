@@ -64,7 +64,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from .models import ChatMessage
 
-def get_grok_response(user_message, context):
+def get_grok_response(user_message, context):   
     """
     Get a response from Grok's API (JSON-safe format).
     """
