@@ -7,6 +7,7 @@ diff-match-patch==20241021
 distro==1.9.0
 dj-database-url==2.3.0
 Django==5.2.1
+django-countries==7.6.1
 django-heroku==0.3.1
 django-import-export==4.3.7
 django-jazzmin==3.0.1
