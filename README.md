@@ -40,7 +40,7 @@ AgriVerify is a comprehensive web application designed to provide reliable infor
 Clone the repository:
    ```bash
    git clone
-   https://github.com/FaithMutua-code/agri-verify-gmo-website
+   https://github.com/melau-eddy/Agri-Verify
    ```
 
 ## 🤝 Contributing
