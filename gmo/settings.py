@@ -10,7 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-from pathlib import Path
+""" 
+collected static files
+ """
+
+from pathlib import Path  
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -54,7 +58,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'gmo.urls'
+ROOT_URLCONF = 'gmo.urls'  
 
 
 
