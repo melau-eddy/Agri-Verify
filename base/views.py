@@ -9,12 +9,14 @@ from datetime import datetime
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.http import Http404
-from .models import Webinar
+from .models import *
 from django.views.decorators.csrf import csrf_exempt
 import openai
 from django.views.generic import DetailView
 import requests  
-from django.utils import timezone
+
+
+
 
 
 
@@ -22,7 +24,7 @@ from django.utils import timezone
 @login_required
 def dashboard(request):
     # Get latest chat messages (last 10)
-    chat_messages = ChatMessage.objects.filter(user=request.user).order_by('-created_at')[:10]  
+    chat_messages = ChatMessage.objects.filter(user=request.user).order_by('-created_at')[:10]
     
     # Get video resources - first one is featured, next 3 are related
     video_resources = EducationalResource.objects.filter(
@@ -55,17 +57,7 @@ def dashboard(request):
     }
     return render(request, 'dashboard.html', context)
 
-
-
-
-import json
-import requests
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
-from .models import ChatMessage
-
-def get_grok_response(user_message, context):   
+def get_grok_response(user_message, context):
     """
     Get a response from Grok's API (JSON-safe format).
     """
@@ -84,7 +76,7 @@ def get_grok_response(user_message, context):
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",  # Verify actual Grok API endpoint
             headers={
-                "Authorization": "Bearer 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",  # Replace with your Grok API key
+                "Authorization": "Bearer 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",  # Replace with your Grok API key
                 "Content-Type": "application/json"
             },
             json={
@@ -171,6 +163,18 @@ def chat_api(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def verification_page(request):
+    """Render the dedicated verification page"""
+    return render(request, 'verify.html')
+
+
 
 def get_related_suggestions(user_message):
     """
@@ -361,7 +365,7 @@ def webinar_redirect(request):
         # Get the latest active webinar
         webinar = Webinar.objects.filter(
             is_active=True,
-            scheduled_time = timezone.now()  # Only future webinars
+            scheduled_time__gte=timezone.now()  # Only future webinars
         ).latest('scheduled_time')
         return redirect(webinar.zoom_registration_url)
     
@@ -386,129 +390,41 @@ class ProductDetailView(DetailView):
 
 
 
-# @csrf_exempt  # Only for development - use proper CSRF protection in production
-# def verify_product(request, product_id):
-#     try:
-#         product = GMOProduct.objects.get(id=product_id)
-        
-#         # In a real app, you might have more complex verification logic
-#         is_verified = product.verification_status == 'verified'
-#         certification_valid = bool(product.certification_id)
-        
-#         return JsonResponse({
-#             'success': True,
-#             'verified': is_verified,
-#             'certification_valid': certification_valid,
-#             'status': product.get_verification_status_display(),
-#             'product': {
-#                 'name': product.name,
-#                 'company': product.company,
-#                 'certification_id': product.certification_id,
-#             }
-#         })
-#     except GMOProduct.DoesNotExist:
-#         return JsonResponse({
-#             'success': False,
-#             'error': 'Product not found'
-#         }, status=404)
-
-
-from django.http import JsonResponse
-from django.views.decorators.http import require_GET, require_POST
-from django.views.decorators.csrf import csrf_exempt
-import json
-
-@csrf_exempt
-@require_POST
-def verify_product(request):
+@csrf_exempt  # Only for development - use proper CSRF protection in production
+def verify_product(request, product_id):
     try:
-        data = json.loads(request.body)
-        qr_data = data.get('qr_data', '')
-        
-        # Extract product ID from QR data
-        product_id = None
-        for line in qr_data.split('\n'):
-            if line.strip().startswith('GMO Product Information:'):
-                continue
-            if 'Name:' in line:
-                product_name = line.split('Name:')[1].strip()
-                try:
-                    product = GMOProduct.objects.get(name=product_name)
-                    product_id = product.id
-                    break
-                except GMOProduct.DoesNotExist:
-                    continue
-        
-        if not product_id:
-            return JsonResponse({
-                'success': False,
-                'error': 'Product not found'
-            }, status=404)
-
         product = GMOProduct.objects.get(id=product_id)
         
-        response_data = {
+        # In a real app, you might have more complex verification logic
+        is_verified = product.verification_status == 'verified'
+        certification_valid = bool(product.certification_id)
+        
+        return JsonResponse({
             'success': True,
-            'verified': product.verification_status == 'verified',
+            'verified': is_verified,
+            'certification_valid': certification_valid,
+            'status': product.get_verification_status_display(),
             'product': {
-                'id': product.id,
                 'name': product.name,
                 'company': product.company,
-                'description': product.description,
-                'crop_type': product.get_crop_type_display(),
-                'verification_status': product.get_verification_status_display(),
                 'certification_id': product.certification_id,
-                'certification_authority': product.certification_authority,
-                'certification_date': product.certification_date.strftime('%Y-%m-%d') if product.certification_date else None,
-                'image_url': product.image.url if product.image else None,
-                'qr_code_url': product.qr_code.url if product.qr_code else None,
             }
-        }
-        return JsonResponse(response_data)
-        
+        })
     except GMOProduct.DoesNotExist:
         return JsonResponse({
             'success': False,
             'error': 'Product not found'
         }, status=404)
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
 
 
-import qrcode
-from io import BytesIO
-from django.core.files import File
-
-def generate_qr_code(product):
-    # Create QR code data (could be JSON or simple text)
-    qr_data = f"AgriVerify Product ID: {product.id}\n"
-    qr_data += f"Name: {product.name}\n"
-    qr_data += f"Certification: {product.certification_id or 'None'}"
-    
-    # Generate QR code
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(qr_data)
-    qr.make(fit=True)
-    
-    img = qr.make_image(fill_color="black", back_color="white")
-    
-    # Save to BytesIO buffer
-    buffer = BytesIO()
-    img.save(buffer, format="PNG")
-    
-    # Save to product model
-    product.qr_code.save(f'qr_{product.id}.png', File(buffer), save=False)
-    product.save()
 
 
 
 def quiz(request):
     return render(request, 'quiz.html')
+
+
+@login_required
+def qr_code_display(request, product_id):
+    product = get_object_or_404(GMOProduct, id=product_id)
+    return render(request, 'qr_code.html', {'product': product})

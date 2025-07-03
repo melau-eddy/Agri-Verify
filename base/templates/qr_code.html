@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div class="max-w-md w-full space-y-8">
+        <!-- QR Code Card -->
+        <div class="bg-white rounded-xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-primary to-primary-dark p-6 text-center">
+                <h2 class="text-2xl font-bold text-white">Product Verification QR Code</h2>
+                <p class="text-white/90 mt-1">Scan this code to verify authenticity</p>
+            </div>
+            
+            <!-- QR Code Display -->
+            <div class="p-8 flex flex-col items-center">
+                {% if product.qr_code %}
+                    <div class="relative">
+                        <!-- QR Code Image -->
+                        <img src="{{ product.qr_code.url }}" alt="Verification QR Code" 
+                             class="w-64 h-64 object-contain border-8 border-white shadow-lg rounded-lg">
+                        
+                        <!-- Verification Badge -->
+                        <div class="absolute -bottom-3 -right-3 bg-white rounded-full p-2 shadow-md">
+                            <div class="bg-green-500 text-white rounded-full p-2">
+                                <i class="ri-shield-check-line ri-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Minimal Info -->
+                    <div class="mt-6 text-center">
+                        <h3 class="font-medium text-gray-900">{{ product.name }}</h3>
+                        <p class="text-sm text-gray-500">{{ product.company }}</p>
+                        <p class="text-xs text-gray-400 mt-2">Certification ID: {{ product.certification_id|default:"N/A" }}</p>
+                    </div>
+                {% else %}
+                    <div class="w-64 h-64 flex items-center justify-center bg-gray-100 rounded-lg">
+                        <div class="text-center">
+                            <i class="ri-error-warning-line ri-4x text-gray-400 mb-2"></i>
+                            <p class="text-gray-500">QR Code Not Available</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="border-t border-gray-200 p-4 bg-gray-50 flex justify-between">
+                <a href="{% url 'product_detail' product.id %}" 
+                   class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                    <i class="ri-arrow-left-line"></i>
+                    <span>Back to Details</span>
+                </a>
+                <button onclick="window.print()" 
+                        class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg flex items-center gap-2">
+                    <i class="ri-printer-line"></i>
+                    <span>Print QR Code</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Verification Instructions -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="font-medium text-lg mb-3">How to Verify</h3>
+            <ol class="space-y-3 text-sm text-gray-600">
+                <li class="flex gap-2">
+                    <span class="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">1</span>
+                    <span>Open the AgriBot mobile app or scan using your device camera</span>
+                </li>
+                <li class="flex gap-2">
+                    <span class="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">2</span>
+                    <span>Point your camera at this QR code</span>
+                </li>
+                <li class="flex gap-2">
+                    <span class="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">3</span>
+                    <span>View instant verification results</span>
+                </li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<!-- Print Styles -->
+<style>
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .max-w-md, .max-w-md * {
+        visibility: visible;
+    }
+    .max-w-md {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        box-shadow: none;
+    }
+    .bg-gradient-to-r {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .flex.justify-between {
+        display: none;
+    }
+}
+</style>
+{% endblock %}

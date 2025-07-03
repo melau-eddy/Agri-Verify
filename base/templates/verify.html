@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<style>
+    /* Custom styles for scanner overlay */
+    #scannerOverlay {
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10;
+    }
+    
+    /* Animation for scanner */
+    @keyframes scanLine {
+        0% { top: 0; }
+        100% { top: 100%; }
+    }
+    
+    .scan-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: rgba(0, 255, 0, 0.5);
+        animation: scanLine 2s infinite linear;
+    }
+    </style>
+
+
+
+<div class="max-w-4xl mx-auto py-8 px-4">
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <!-- Verification Header -->
+        <div class="p-6 border-b border-gray-100">
+            <h1 class="text-2xl font-bold text-gray-900">Product Verification</h1>
+            <p class="text-gray-600 mt-1">Scan a product's QR code to verify its authenticity</p>
+        </div>
+        
+        <!-- Scanner Section -->
+        <div class="p-6 flex flex-col items-center">
+            <div id="scannerContainer" class="relative w-full max-w-md aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
+                <!-- Video feed will be inserted here by JavaScript -->
+                <div id="scannerOverlay" class="absolute inset-0 flex items-center justify-center">
+                    <div class="border-4 border-primary rounded-lg w-64 h-64 relative">
+                        <div class="absolute -top-1 -left-1 w-8 h-8 border-l-4 border-t-4 border-primary"></div>
+                        <div class="absolute -top-1 -right-1 w-8 h-8 border-r-4 border-t-4 border-primary"></div>
+                        <div class="absolute -bottom-1 -left-1 w-8 h-8 border-l-4 border-b-4 border-primary"></div>
+                        <div class="absolute -bottom-1 -right-1 w-8 h-8 border-r-4 border-b-4 border-primary"></div>
+                    </div>
+                </div>
+                <video id="qrScanner" class="hidden w-full h-full object-cover"></video>
+            </div>
+            
+            <div class="text-center mb-6">
+                <p class="text-gray-500 mb-3">Position the QR code within the frame above</p>
+                <button id="toggleCamera" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 mx-auto">
+                    <i class="ri-camera-switch-line"></i>
+                    <span>Switch Camera</span>
+                </button>
+            </div>
+            
+            <div class="w-full max-w-md">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                    <span class="text-gray-400 text-sm">OR</span>
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-medium mb-2">Enter QR Code Manually</h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="manualQrInput" class="flex-1 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Paste QR code data here">
+                        <button onclick="verifyManualCode()" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg">
+                            Verify
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Verification Result Section (initially hidden) -->
+    <div id="verificationResult" class="hidden mt-6 bg-white rounded-xl shadow-sm overflow-hidden">
+        <!-- Result content will be dynamically inserted here -->
+    </div>
+</div>
+
+<!-- QR Scanner Library -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+<script>
+// Scanner functionality
+let scannerActive = false;
+let videoStream = null;
+let currentCamera = 'environment'; // Start with rear camera
+let scanningInterval = null;
+
+// DOM Elements
+const scannerContainer = document.getElementById('scannerContainer');
+const scannerOverlay = document.getElementById('scannerOverlay');
+const qrScanner = document.getElementById('qrScanner');
+const toggleCameraBtn = document.getElementById('toggleCamera');
+const verificationResult = document.getElementById('verificationResult');
+
+// Initialize scanner
+function initScanner() {
+    // Check for camera support
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        scannerOverlay.innerHTML = `
+            <div class="text-center p-4">
+                <i class="ri-camera-off-line ri-3x text-gray-400 mb-2"></i>
+                <p class="text-gray-600">Camera access not supported or blocked</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Start scanner
+    startScanner();
+}
+
+// Start the scanner with current camera
+function startScanner() {
+    scannerActive = true;
+    
+    navigator.mediaDevices.getUserMedia({
+        video: {
+            facingMode: currentCamera,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        },
+        audio: false
+    }).then(stream => {
+        videoStream = stream;
+        qrScanner.srcObject = stream;
+        qrScanner.classList.remove('hidden');
+        qrScanner.play();
+        
+        // Start scanning for QR codes
+        scanningInterval = setInterval(scanForQrCode, 500);
+    }).catch(err => {
+        console.error("Camera error:", err);
+        scannerOverlay.innerHTML = `
+            <div class="text-center p-4">
+                <i class="ri-camera-off-line ri-3x text-gray-400 mb-2"></i>
+                <p class="text-gray-600">Could not access camera: ${err.message}</p>
+            </div>
+        `;
+    });
+}
+
+// Stop the scanner
+function stopScanner() {
+    scannerActive = false;
+    
+    if (scanningInterval) {
+        clearInterval(scanningInterval);
+        scanningInterval = null;
+    }
+    
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
+    
+    qrScanner.srcObject = null;
+    qrScanner.classList.add('hidden');
+}
+
+// Scan for QR codes in video stream
+function scanForQrCode() {
+    if (!scannerActive || qrScanner.readyState !== qrScanner.HAVE_ENOUGH_DATA) return;
+    
+    // Create canvas for QR detection
+    const canvas = document.createElement('canvas');
+    canvas.width = qrScanner.videoWidth;
+    canvas.height = qrScanner.videoHeight;
+    const context = canvas.getContext('2d');
+    
+    // Draw video frame to canvas
+    context.drawImage(qrScanner, 0, 0, canvas.width, canvas.height);
+    
+    // Get image data for QR detection
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    
+    // Try to decode QR code
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert',
+    });
+    
+    if (code) {
+        // QR code found!
+        stopScanner();
+        verifyQrCode(code.data);
+    }
+}
+
+// Toggle between front and back camera
+toggleCameraBtn.addEventListener('click', () => {
+    currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+    stopScanner();
+    startScanner();
+});
+
+// Verify QR code data
+function verifyQrCode(qrData) {
+    // Show loading state
+    verificationResult.innerHTML = `
+        <div class="p-6 flex flex-col items-center">
+            <div class="w-16 h-16 flex items-center justify-center bg-primary/10 text-primary rounded-full mb-4">
+                <i class="ri-loader-4-line ri-2x animate-spin"></i>
+            </div>
+            <h3 class="font-medium text-lg mb-1">Verifying Product</h3>
+            <p class="text-gray-500">Please wait while we verify the product</p>
+        </div>
+    `;
+    verificationResult.classList.remove('hidden');
+    
+    // Send QR data to server for verification
+    fetch('/verify-product/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            qr_data: qrData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showVerificationResult(data.product);
+        } else {
+            showVerificationError(data.message || 'Verification failed');
+        }
+    })
+    .catch(error => {
+        console.error('Verification error:', error);
+        showVerificationError('Could not connect to verification service');
+    });
+}
+
+// Verify manually entered code
+function verifyManualCode() {
+    const manualInput = document.getElementById('manualQrInput').value.trim();
+    if (!manualInput) {
+        alert('Please enter QR code data');
+        return;
+    }
+    verifyQrCode(manualInput);
+}
+
+// Show successful verification result
+function showVerificationResult(product) {
+    verificationResult.innerHTML = `
+        <div class="p-6 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-gray-900">Verification Result</h2>
+        </div>
+        <div class="p-6">
+            <div class="flex flex-col md:flex-row gap-6">
+                <div class="w-full md:w-1/3">
+                    <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
+                        ${product.image_url ? 
+                            `<img src="${product.image_url}" alt="${product.name}" class="w-full h-full object-cover">` :
+                            `<div class="w-full h-full flex items-center justify-center text-gray-400">
+                                <i class="ri-seedling-line ri-4x"></i>
+                            </div>`
+                        }
+                    </div>
+                    <div class="text-center">
+                        <span class="text-xs px-2 py-1 rounded-full 
+                            ${product.verification_status === 'Verified' ? 'bg-green-100 text-green-800' : 
+                              product.verification_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                              'bg-red-100 text-red-800'}">
+                            ${product.verification_status}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="flex-1">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold">${product.name}</h3>
+                        <span class="text-sm text-gray-500">${product.company}</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <p class="text-sm text-gray-500">Crop Type</p>
+                            <p class="font-medium">${product.crop_type}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Certification ID</p>
+                            <p class="font-medium">${product.certification_id || 'None'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Certification Authority</p>
+                            <p class="font-medium">${product.certification_authority || 'None'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Certification Date</p>
+                            <p class="font-medium">${product.certification_date || 'Not available'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium mb-2">Verification Details</h4>
+                        <p class="text-sm text-gray-700">
+                            This product has been ${product.verification_status === 'Verified' ? 
+                            'successfully verified against our government database.' : 
+                            product.verification_status === 'Pending' ? 
+                            'submitted for verification and is currently pending approval.' : 
+                            'rejected during verification.'}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-4 bg-gray-50 flex justify-end">
+            <button onclick="resetScanner()" class="px-6 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg flex items-center gap-2">
+                <i class="ri-qr-scan-2-line"></i>
+                <span>Scan Another Product</span>
+            </button>
+        </div>
+    `;
+}
+
+// Show verification error
+function showVerificationError(message) {
+    verificationResult.innerHTML = `
+        <div class="p-6 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-gray-900">Verification Error</h2>
+        </div>
+        <div class="p-6 flex flex-col items-center">
+            <div class="w-16 h-16 flex items-center justify-center bg-red-100 text-red-600 rounded-full mb-4">
+                <i class="ri-close-line ri-2x"></i>
+            </div>
+            <h3 class="font-medium text-lg mb-1">Verification Failed</h3>
+            <p class="text-gray-500 text-center mb-4">${message}</p>
+            <button onclick="resetScanner()" class="px-6 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg">
+                Try Again
+            </button>
+        </div>
+    `;
+}
+
+// Reset scanner for new scan
+function resetScanner() {
+    verificationResult.classList.add('hidden');
+    document.getElementById('manualQrInput').value = '';
+    initScanner();
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', initScanner);
+
+// Clean up when leaving page
+window.addEventListener('beforeunload', () => {
+    stopScanner();
+});
+</script>
+
+
+{% endblock %}
