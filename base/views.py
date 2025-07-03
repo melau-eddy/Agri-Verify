@@ -386,33 +386,102 @@ class ProductDetailView(DetailView):
 
 
 
-@csrf_exempt  # Only for development - use proper CSRF protection in production
+# @csrf_exempt  # Only for development - use proper CSRF protection in production
+# def verify_product(request, product_id):
+#     try:
+#         product = GMOProduct.objects.get(id=product_id)
+        
+#         # In a real app, you might have more complex verification logic
+#         is_verified = product.verification_status == 'verified'
+#         certification_valid = bool(product.certification_id)
+        
+#         return JsonResponse({
+#             'success': True,
+#             'verified': is_verified,
+#             'certification_valid': certification_valid,
+#             'status': product.get_verification_status_display(),
+#             'product': {
+#                 'name': product.name,
+#                 'company': product.company,
+#                 'certification_id': product.certification_id,
+#             }
+#         })
+#     except GMOProduct.DoesNotExist:
+#         return JsonResponse({
+#             'success': False,
+#             'error': 'Product not found'
+#         }, status=404)
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+from .models import GMOProduct
+
+@require_GET
 def verify_product(request, product_id):
     try:
         product = GMOProduct.objects.get(id=product_id)
         
-        # In a real app, you might have more complex verification logic
-        is_verified = product.verification_status == 'verified'
-        certification_valid = bool(product.certification_id)
-        
-        return JsonResponse({
+        response_data = {
             'success': True,
-            'verified': is_verified,
-            'certification_valid': certification_valid,
-            'status': product.get_verification_status_display(),
+            'verified': product.verification_status == 'verified',
             'product': {
+                'id': product.id,
                 'name': product.name,
                 'company': product.company,
+                'description': product.description,
+                'crop_type': product.get_crop_type_display(),
+                'verification_status': product.get_verification_status_display(),
                 'certification_id': product.certification_id,
+                'certification_authority': product.certification_authority,
+                'certification_date': product.certification_date.strftime('%Y-%m-%d') if product.certification_date else None,
+                'image_url': product.image.url if product.image else None,
             }
-        })
+        }
+        return JsonResponse(response_data)
+        
     except GMOProduct.DoesNotExist:
         return JsonResponse({
             'success': False,
             'error': 'Product not found'
         }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
+import qrcode
+from io import BytesIO
+from django.core.files import File
+
+def generate_qr_code(product):
+    # Create QR code data (could be JSON or simple text)
+    qr_data = f"AgriVerify Product ID: {product.id}\n"
+    qr_data += f"Name: {product.name}\n"
+    qr_data += f"Certification: {product.certification_id or 'None'}"
+    
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Save to BytesIO buffer
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    
+    # Save to product model
+    product.qr_code.save(f'qr_{product.id}.png', File(buffer), save=False)
+    product.save()
 
 
 

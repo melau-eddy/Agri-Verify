@@ -529,66 +529,261 @@ function scrollToBottom() {
         </script>
     </div>
     
-    <!-- Right Column - Verification Tools & Products -->
-    <div>
-        <!-- QR Scanner Section -->
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-            <div class="p-4 border-b border-gray-100">
-                <h2 class="font-medium text-lg">Product Verification</h2>
-            </div>
-            <div class="p-6 flex flex-col items-center">
-                <div class="w-20 h-20 flex items-center justify-center bg-primary/10 text-primary rounded-full mb-4">
-                    <i class="ri-qr-scan-2-line ri-2x"></i>
-                </div>
-                <h3 class="font-medium text-center mb-2">Scan QR Code to Verify</h3>
-                <p class="text-sm text-gray-500 text-center mb-4">Quickly verify if a GMO product is government-approved</p>
-                <button class="bg-primary text-white px-6 py-3 rounded-lg flex items-center gap-2 !rounded-button whitespace-nowrap" onclick="openVerificationModal(this)">
-                    <i class="ri-camera-line"></i>
-                    <span>Scan Product</span>
+    <!-- Verification Modal -->
+    <div id="verificationModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg max-w-lg w-full mx-4">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-medium text-lg">Product Verification</h3>
+                <button onclick="closeVerificationModal()" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-full">
+                    <i class="ri-close-line"></i>
                 </button>
             </div>
-        </div>
-        
-        
-        <!-- Verified Products List -->
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
-                <h2 class="font-medium text-lg">Verified Products</h2>
-                <a href="#" class="text-primary text-sm font-medium">View All</a>
-            </div>
-            <div class="divide-y divide-gray-100">
-                {% for product in verified_products %}
-                <div class="p-4 flex gap-3">
-                    <div class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                        {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
-                        {% else %}
-                            <img src="https://readdy.ai/api/search-image?query={{ product.name|urlencode }}&width=64&height=64&seq=1&orientation=squarish" alt="{{ product.name }}" class="w-full h-full object-cover">
-                        {% endif %}
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-medium">{{ product.name }}</h3>
-                            <div class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">Verified</div>
+            <div class="p-6">
+                <div class="flex flex-col items-center mb-6">
+                    <div id="qrScanner" class="w-full aspect-square bg-gray-900 rounded-lg mb-4 relative hidden">
+                        <video id="qrVideo" class="w-full h-full object-cover rounded-lg"></video>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-48 h-48 border-2 border-primary rounded-lg"></div>
                         </div>
-                        <p class="text-sm text-gray-500 mt-1">{{ product.description }}</p>
-                        <div class="flex items-center gap-4 mt-2">
-                            <button class="text-primary text-sm font-medium flex items-center gap-1">
-                                <i class="ri-information-line"></i>
-                                <span>Details</span>
-                            </button>
-                            <a href="{% url 'product_detail' product.id %}" class="text-primary text-sm font-medium flex items-center gap-1">
-                                <i class="ri-qr-code-line"></i>
-                                <span>Verify</span>
-                            </a>
+                    </div>
+                    <div id="verificationResult" class="w-full hidden">
+                        <div class="flex items-center gap-3 p-4 rounded-lg mb-4">
+                            <div id="verificationIcon" class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-full"></div>
+                            <div class="flex-1">
+                                <h4 id="verificationStatus" class="font-medium"></h4>
+                                <p id="verificationMessage" class="text-sm text-gray-500"></p>
+                            </div>
+                        </div>
+                        <div class="space-y-4 border-t border-gray-100 pt-4">
+                            <div>
+                                <h5 class="text-sm font-medium mb-2">Certification Details</h5>
+                                <div class="text-sm text-gray-600">
+                                    <p id="certificationId"></p>
+                                    <p id="certificationDate"></p>
+                                    <p id="certificationAuthority"></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button onclick="startQRScanner()" class="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:border-primary !rounded-button">
+                        <div class="w-10 h-10 flex items-center justify-center bg-primary/10 text-primary rounded-full">
+                            <i class="ri-qr-scan-2-line"></i>
+                        </div>
+                        <span class="text-sm font-medium">Scan QR</span>
+                    </button>
+                    <button onclick="showCodeInput()" class="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:border-primary !rounded-button">
+                        <div class="w-10 h-10 flex items-center justify-center bg-primary/10 text-primary rounded-full">
+                            <i class="ri-keyboard-box-line"></i>
+                        </div>
+                        <span class="text-sm font-medium">Enter Code</span>
+                    </button>
+                    <button onclick="uploadImage()" class="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:border-primary !rounded-button">
+                        <div class="w-10 h-10 flex items-center justify-center bg-primary/10 text-primary rounded-full">
+                            <i class="ri-image-add-line"></i>
+                        </div>
+                        <span class="text-sm font-medium">Upload Image</span>
+                    </button>
+                </div>
+                <div id="codeInputSection" class="mt-4 hidden">
+                    <div class="relative">
+                        <input type="text" id="verificationCode" class="w-full pl-4 pr-12 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter verification code">
+                        <button onclick="verifyManualCode()" class="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 flex items-center justify-center text-primary">
+                            <i class="ri-arrow-right-line"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // QR Scanner functionality
+let scanner = null;
+
+function openVerificationModal() {
+    const modal = document.getElementById('verificationModal');
+    modal.classList.remove('hidden');
+    resetModalState();
+}
+
+function closeVerificationModal() {
+    const modal = document.getElementById('verificationModal');
+    modal.classList.add('hidden');
+    stopQRScanner();
+    resetModalState();
+}
+
+function startQRScanner() {
+    const scannerElement = document.getElementById('qrScanner');
+    const videoElement = document.getElementById('qrVideo');
+    scannerElement.classList.remove('hidden');
+    document.getElementById('codeInputSection').classList.add('hidden');
+    document.getElementById('verificationResult').classList.add('hidden');
+    
+    // Use the browser's QR scanning API
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(function(stream) {
+                videoElement.srcObject = stream;
+                videoElement.play();
+                
+                // Create a QR code detector
+                const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+                
+                // Check for QR codes periodically
+                scanner = setInterval(() => {
+                    if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                        barcodeDetector.detect(videoElement)
+                            .then(barcodes => {
+                                if (barcodes.length > 0) {
+                                    const qrData = barcodes[0].rawValue;
+                                    processQRData(qrData);
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Barcode detection error:', err);
+                            });
+                    }
+                }, 500);
+            })
+            .catch(function(err) {
+                console.error('Camera access error:', err);
+                showVerificationResult(false, 'Could not access camera. Please check permissions.');
+            });
+    } else {
+        showVerificationResult(false, 'QR scanning not supported in this browser.');
+    }
+}
+
+function stopQRScanner() {
+    const video = document.getElementById('qrVideo');
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+    }
+    if (scanner) {
+        clearInterval(scanner);
+        scanner = null;
+    }
+    document.getElementById('qrScanner').classList.add('hidden');
+}
+
+function processQRData(qrData) {
+    stopQRScanner();
+    
+    try {
+        // Parse the QR data (assuming it contains the product ID)
+        const productId = extractProductIdFromQR(qrData);
+        
+        if (!productId) {
+            showVerificationResult(false, 'Invalid QR code format. Could not find product ID.');
+            return;
+        }
+        
+        // Verify the product via AJAX
+        verifyProduct(productId);
+    } catch (e) {
+        showVerificationResult(false, 'Error processing QR code: ' + e.message);
+    }
+}
+
+function extractProductIdFromQR(qrData) {
+    // Try to parse as JSON first
+    try {
+        const data = JSON.parse(qrData);
+        if (data.product_id) return data.product_id;
+    } catch (e) {}
+    
+    // Try to find product ID in text format
+    const idMatch = qrData.match(/product[_-]id[:=](\d+)/i);
+    if (idMatch) return idMatch[1];
+    
+    // As last resort, assume the entire QR data is the product ID
+    return qrData.trim();
+}
+
+function verifyProduct(productId) {
+    fetch(`/verify-product/${productId}/`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showVerificationResult(data.verified, data);
+        } else {
+            showVerificationResult(false, data.error || 'Verification failed');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showVerificationResult(false, 'Network error during verification');
+    });
+}
+
+function showVerificationResult(isVerified, data) {
+    const result = document.getElementById('verificationResult');
+    const statusIcon = document.getElementById('verificationIcon');
+    const status = document.getElementById('verificationStatus');
+    const message = document.getElementById('verificationMessage');
+    const certId = document.getElementById('certificationId');
+    const certDate = document.getElementById('certificationDate');
+    const certAuth = document.getElementById('certificationAuthority');
+    
+    if (isVerified) {
+        statusIcon.className = 'w-12 h-12 flex-shrink-0 flex items-center justify-center bg-green-100 text-green-800 rounded-full';
+        statusIcon.innerHTML = '<i class="ri-check-line ri-lg"></i>';
+        status.textContent = 'Verification Successful';
+        status.className = 'font-medium text-green-800';
+        message.textContent = `${data.product.name} is a verified GMO product from ${data.product.company}`;
+        certId.textContent = 'Certification ID: ' + (data.product.certification_id || 'N/A');
+        certDate.textContent = 'Certification Date: ' + (data.product.certification_date || 'N/A');
+        certAuth.textContent = 'Certifying Authority: ' + (data.product.certification_authority || 'N/A');
+    } else {
+        statusIcon.className = 'w-12 h-12 flex-shrink-0 flex items-center justify-center bg-red-100 text-red-800 rounded-full';
+        statusIcon.innerHTML = '<i class="ri-close-line ri-lg"></i>';
+        status.textContent = 'Verification Failed';
+        status.className = 'font-medium text-red-800';
+        message.textContent = typeof data === 'string' ? data : (data.error || 'Unable to verify the product.');
+        certId.textContent = '';
+        certDate.textContent = '';
+        certAuth.textContent = '';
+    }
+    
+    document.getElementById('qrScanner').classList.add('hidden');
+    document.getElementById('codeInputSection').classList.add('hidden');
+    result.classList.remove('hidden');
+}
+
+function resetModalState() {
+    document.getElementById('qrScanner').classList.add('hidden');
+    document.getElementById('codeInputSection').classList.add('hidden');
+    document.getElementById('verificationResult').classList.add('hidden');
+    document.getElementById('verificationCode').value = '';
+    stopQRScanner();
+}
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
 
 <!-- Product Directory Section -->
 <div class="mt-8 bg-white rounded-lg shadow-sm overflow-hidden">
