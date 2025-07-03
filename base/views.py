@@ -413,14 +413,38 @@ class ProductDetailView(DetailView):
 #         }, status=404)
 
 
-
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET
-from .models import GMOProduct
+from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.csrf import csrf_exempt
+import json
 
-@require_GET
-def verify_product(request, product_id):
+@csrf_exempt
+@require_POST
+def verify_product(request):
     try:
+        data = json.loads(request.body)
+        qr_data = data.get('qr_data', '')
+        
+        # Extract product ID from QR data
+        product_id = None
+        for line in qr_data.split('\n'):
+            if line.strip().startswith('GMO Product Information:'):
+                continue
+            if 'Name:' in line:
+                product_name = line.split('Name:')[1].strip()
+                try:
+                    product = GMOProduct.objects.get(name=product_name)
+                    product_id = product.id
+                    break
+                except GMOProduct.DoesNotExist:
+                    continue
+        
+        if not product_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Product not found'
+            }, status=404)
+
         product = GMOProduct.objects.get(id=product_id)
         
         response_data = {
@@ -437,6 +461,7 @@ def verify_product(request, product_id):
                 'certification_authority': product.certification_authority,
                 'certification_date': product.certification_date.strftime('%Y-%m-%d') if product.certification_date else None,
                 'image_url': product.image.url if product.image else None,
+                'qr_code_url': product.qr_code.url if product.qr_code else None,
             }
         }
         return JsonResponse(response_data)

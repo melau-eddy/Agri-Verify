@@ -555,12 +555,13 @@ function scrollToBottom() {
                             </div>
                         </div>
                         <div class="space-y-4 border-t border-gray-100 pt-4">
+                            <img id="productImage" src="" class="hidden w-full h-48 object-contain rounded-lg">
                             <div>
-                                <h5 class="text-sm font-medium mb-2">Certification Details</h5>
-                                <div class="text-sm text-gray-600">
-                                    <p id="certificationId"></p>
-                                    <p id="certificationDate"></p>
-                                    <p id="certificationAuthority"></p>
+                                <h5 class="text-sm font-medium mb-2">Product Details</h5>
+                                <div class="text-sm text-gray-600 space-y-1">
+                                    <p><span class="font-medium">Name:</span> <span id="productName"></span></p>
+                                    <p><span class="font-medium">Company:</span> <span id="productCompany"></span></p>
+                                    <p><span class="font-medium">Status:</span> <span id="productStatus"></span></p>
                                 </div>
                             </div>
                         </div>
@@ -623,17 +624,15 @@ function startQRScanner() {
     document.getElementById('codeInputSection').classList.add('hidden');
     document.getElementById('verificationResult').classList.add('hidden');
     
-    // Use the browser's QR scanning API
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
             .then(function(stream) {
                 videoElement.srcObject = stream;
                 videoElement.play();
                 
-                // Create a QR code detector
+                // Create QR code detector
                 const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
                 
-                // Check for QR codes periodically
                 scanner = setInterval(() => {
                     if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
                         barcodeDetector.detect(videoElement)
@@ -673,44 +672,13 @@ function stopQRScanner() {
 function processQRData(qrData) {
     stopQRScanner();
     
-    try {
-        // Parse the QR data (assuming it contains the product ID)
-        const productId = extractProductIdFromQR(qrData);
-        
-        if (!productId) {
-            showVerificationResult(false, 'Invalid QR code format. Could not find product ID.');
-            return;
-        }
-        
-        // Verify the product via AJAX
-        verifyProduct(productId);
-    } catch (e) {
-        showVerificationResult(false, 'Error processing QR code: ' + e.message);
-    }
-}
-
-function extractProductIdFromQR(qrData) {
-    // Try to parse as JSON first
-    try {
-        const data = JSON.parse(qrData);
-        if (data.product_id) return data.product_id;
-    } catch (e) {}
-    
-    // Try to find product ID in text format
-    const idMatch = qrData.match(/product[_-]id[:=](\d+)/i);
-    if (idMatch) return idMatch[1];
-    
-    // As last resort, assume the entire QR data is the product ID
-    return qrData.trim();
-}
-
-function verifyProduct(productId) {
-    fetch(`/verify-product/${productId}/`, {
-        method: 'GET',
+    fetch('/api/verify-product/', {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken'),
-        }
+        },
+        body: JSON.stringify({ qr_data: qrData })
     })
     .then(response => response.json())
     .then(data => {
@@ -731,9 +699,10 @@ function showVerificationResult(isVerified, data) {
     const statusIcon = document.getElementById('verificationIcon');
     const status = document.getElementById('verificationStatus');
     const message = document.getElementById('verificationMessage');
-    const certId = document.getElementById('certificationId');
-    const certDate = document.getElementById('certificationDate');
-    const certAuth = document.getElementById('certificationAuthority');
+    const productName = document.getElementById('productName');
+    const productCompany = document.getElementById('productCompany');
+    const productStatus = document.getElementById('productStatus');
+    const productImage = document.getElementById('productImage');
     
     if (isVerified) {
         statusIcon.className = 'w-12 h-12 flex-shrink-0 flex items-center justify-center bg-green-100 text-green-800 rounded-full';
@@ -741,31 +710,26 @@ function showVerificationResult(isVerified, data) {
         status.textContent = 'Verification Successful';
         status.className = 'font-medium text-green-800';
         message.textContent = `${data.product.name} is a verified GMO product from ${data.product.company}`;
-        certId.textContent = 'Certification ID: ' + (data.product.certification_id || 'N/A');
-        certDate.textContent = 'Certification Date: ' + (data.product.certification_date || 'N/A');
-        certAuth.textContent = 'Certifying Authority: ' + (data.product.certification_authority || 'N/A');
+        
+        // Populate product details
+        productName.textContent = data.product.name;
+        productCompany.textContent = data.product.company;
+        productStatus.textContent = data.product.verification_status;
+        if (data.product.image_url) {
+            productImage.src = data.product.image_url;
+            productImage.classList.remove('hidden');
+        }
     } else {
         statusIcon.className = 'w-12 h-12 flex-shrink-0 flex items-center justify-center bg-red-100 text-red-800 rounded-full';
         statusIcon.innerHTML = '<i class="ri-close-line ri-lg"></i>';
         status.textContent = 'Verification Failed';
         status.className = 'font-medium text-red-800';
         message.textContent = typeof data === 'string' ? data : (data.error || 'Unable to verify the product.');
-        certId.textContent = '';
-        certDate.textContent = '';
-        certAuth.textContent = '';
     }
     
     document.getElementById('qrScanner').classList.add('hidden');
     document.getElementById('codeInputSection').classList.add('hidden');
     result.classList.remove('hidden');
-}
-
-function resetModalState() {
-    document.getElementById('qrScanner').classList.add('hidden');
-    document.getElementById('codeInputSection').classList.add('hidden');
-    document.getElementById('verificationResult').classList.add('hidden');
-    document.getElementById('verificationCode').value = '';
-    stopQRScanner();
 }
 
 // Helper function to get CSRF token
