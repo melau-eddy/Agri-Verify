@@ -14,6 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 import openai
 from django.views.generic import DetailView
 import requests  
+from django.utils import timezone
 
 
 
@@ -360,7 +361,7 @@ def webinar_redirect(request):
         # Get the latest active webinar
         webinar = Webinar.objects.filter(
             is_active=True,
-            scheduled_time__gte=timezone.now()  # Only future webinars
+            scheduled_time = timezone.now()  # Only future webinars
         ).latest('scheduled_time')
         return redirect(webinar.zoom_registration_url)
     
