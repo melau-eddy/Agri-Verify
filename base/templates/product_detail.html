@@ -137,7 +137,8 @@
 </div>
 
 <script>
- function verifyProduct() {
+ // In product_detail.html
+function verifyProduct() {
     const productId = "{{ product.id }}";
     const iconContainer = document.getElementById('verificationIcon');
     const titleElement = document.getElementById('verificationTitle');
@@ -148,11 +149,17 @@
     iconContainer.innerHTML = '<i class="ri-loader-4-line ri-3x animate-spin text-gray-500"></i>';
     titleElement.textContent = 'Verifying Product...';
     messageElement.textContent = 'Checking product authenticity';
-    statusElement.textContent = ''; // Clear previous status
+    statusElement.textContent = '';
     document.getElementById('resultModal').classList.remove('hidden');
     document.getElementById('resultModal').classList.add('flex');
 
-    fetch(`/api/products/${productId}/verify/`)
+    fetch(`/verify/product/${productId}/`, {  // Updated endpoint
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
     .then(response => {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -161,31 +168,33 @@
     })
     .then(data => {
         if (data.success) {
-            // Only show success if API confirms verification
             iconContainer.innerHTML = '<i class="ri-checkbox-circle-fill ri-5x text-green-500"></i>';
             titleElement.textContent = 'Verification Successful';
             titleElement.className = 'text-xl font-semibold mb-2 text-green-600';
             messageElement.textContent = 'This product is verified and authentic.';
             statusElement.textContent = data.status;
             statusElement.className = 'font-medium text-green-600';
+            
+            // Update product details in modal
+            document.querySelector('#verificationDetails div:nth-child(4)').textContent = data.product.name;
+            document.querySelector('#verificationDetails div:nth-child(6)').textContent = data.product.company;
+            document.querySelector('#verificationDetails div:nth-child(8)').textContent = data.product.certification_id || 'None';
         } else {
-            // API returned failure
             iconContainer.innerHTML = '<i class="ri-close-circle-fill ri-5x text-red-500"></i>';
             titleElement.textContent = 'Verification Failed';
             titleElement.className = 'text-xl font-semibold mb-2 text-red-600';
             messageElement.textContent = data.error || 'Product verification failed';
-            statusElement.textContent = data.status || 'Not verified';
+            statusElement.textContent = 'Not verified';
             statusElement.className = 'font-medium text-red-600';
         }
     })
     .catch(error => {
         console.error('Verification error:', error);
-        // Only show connection error - don't show any product status
         iconContainer.innerHTML = '<i class="ri-error-warning-fill ri-5x text-yellow-500"></i>';
         titleElement.textContent = 'Verification Error';
         titleElement.className = 'text-xl font-semibold mb-2 text-yellow-600';
-        messageElement.textContent = 'Could not connect to verification service';
-        statusElement.textContent = ''; // Clear status on connection errors
+        messageElement.textContent = 'Could not connect to verification service: ' + error.message;
+        statusElement.textContent = '';
     });
 }
 

@@ -390,32 +390,6 @@ class ProductDetailView(DetailView):
 
 
 
-@csrf_exempt  # Only for development - use proper CSRF protection in production
-def verify_product(request, product_id):
-    try:
-        product = GMOProduct.objects.get(id=product_id)
-        
-        # In a real app, you might have more complex verification logic
-        is_verified = product.verification_status == 'verified'
-        certification_valid = bool(product.certification_id)
-        
-        return JsonResponse({
-            'success': True,
-            'verified': is_verified,
-            'certification_valid': certification_valid,
-            'status': product.get_verification_status_display(),
-            'product': {
-                'name': product.name,
-                'company': product.company,
-                'certification_id': product.certification_id,
-            }
-        })
-    except GMOProduct.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'error': 'Product not found'
-        }, status=404)
-
 
 
 
@@ -428,3 +402,110 @@ def quiz(request):
 def qr_code_display(request, product_id):
     product = get_object_or_404(GMOProduct, id=product_id)
     return render(request, 'qr_code.html', {'product': product})
+
+
+
+@csrf_exempt
+@login_required
+def verify_qr_code(request):
+    """Handle QR code verification with robust error handling"""
+    response_template = {
+        'status': 'error',
+        'message': 'Unknown error occurred',
+        'product': None
+    }
+
+    if request.method != 'POST':
+        response_template['message'] = 'Only POST requests are allowed'
+        return JsonResponse(response_template, status=405)
+
+    try:
+        # Parse request data
+        try:
+            request_data = json.loads(request.body)
+            qr_data = request_data.get('qr_data', '').strip()
+        except json.JSONDecodeError:
+            response_template['message'] = 'Invalid JSON data'
+            return JsonResponse(response_template, status=400)
+
+        if not qr_data:
+            response_template['message'] = 'QR code data is empty'
+            return JsonResponse(response_template, status=400)
+
+        # Extract product identifiers
+        product_identifiers = {
+            'certification_id': None,
+            'name': None
+        }
+
+        for line in qr_data.split('\n'):
+            if line.startswith('Certification:'):
+                product_identifiers['certification_id'] = line.split(': ')[1].strip()
+            elif line.startswith('Name:'):
+                product_identifiers['name'] = line.split(': ')[1].strip()
+
+        # Try to find product
+        product = None
+        if product_identifiers['certification_id']:
+            product = GMOProduct.objects.filter(
+                certification_id=product_identifiers['certification_id']
+            ).first()
+
+        if not product and product_identifiers['name']:
+            product = GMOProduct.objects.filter(
+                name__iexact=product_identifiers['name']
+            ).first()
+
+        if product:
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Product verified successfully',
+                'product': {
+                    'id': product.id,
+                    'name': product.name,
+                    'company': product.company,
+                    'crop_type': product.get_crop_type_display(),
+                    'verification_status': product.get_verification_status_display(),
+                    'certification_id': product.certification_id,
+                    'certification_authority': product.certification_authority,
+                    'certification_date': product.certification_date.strftime('%Y-%m-%d') if product.certification_date else None,
+                    'image_url': product.image.url if product.image else None,
+                }
+            })
+
+        response_template['message'] = 'Product not found in database'
+        return JsonResponse(response_template, status=404)
+
+    except Exception as e:
+        response_template['message'] = f'Server error: {str(e)}'
+        return JsonResponse(response_template, status=500)
+
+        
+
+@csrf_exempt
+@login_required
+def verify_product(request, product_id):
+    """Handle direct product verification by ID"""
+    try:
+        product = get_object_or_404(GMOProduct, id=product_id)
+        
+        is_verified = product.verification_status == 'verified'
+        certification_valid = bool(product.certification_id)
+        
+        return JsonResponse({
+            'success': True,
+            'verified': is_verified,
+            'certification_valid': certification_valid,
+            'status': product.get_verification_status_display(),
+            'product': {
+                'name': product.name,
+                'company': product.company,
+                'certification_id': product.certification_id,
+                'image_url': product.image.url if product.image else None,
+            }
+        })
+    except GMOProduct.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Product not found'
+        }, status=404)

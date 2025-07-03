@@ -4,8 +4,8 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
-     path('verify/', views.verification_page, name='verification_page'),
-    path('verify-product/', views.verify_product, name='verify_product'),
+    path('verify/', views.verification_page, name='verification_page'),
+    path('verify/qr/', views.verify_qr_code, name='verify_qr_code'),  # For QR code verification
     path('filter-products/', views.filter_products, name='filter_products'),
     path('login/', views.login_view, name='login_view'),
     path('register/', views.register, name='register'),
@@ -16,7 +16,7 @@ urlpatterns = [
     path('products/<int:product_id>/qr/', views.qr_code_display, name='qr_code_display'),
 
     path('product/<int:pk>/', views.ProductDetailView.as_view(), name='product_detail'),
-    path('api/products/<int:product_id>/verify/', views.verify_product, name='verify_product'),
+    path('verify-product/', views.verify_product, name='verify_product'),
 
     path('password-reset/', 
          auth_views.PasswordResetView.as_view(
