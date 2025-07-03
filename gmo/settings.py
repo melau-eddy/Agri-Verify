@@ -147,6 +147,14 @@ LOGIN_URL = 'login_view'
 MEDIA_URL = 'media/'
 
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # e.g., smtp.gmail.com
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'geniusokwemba53@gmail.com'
+EMAIL_HOST_PASSWORD = 'ekvafdrcwoxdrtpj'
+
+
 
 # Jazzmin UI Settings
 JAZZMIN_SETTINGS = {
