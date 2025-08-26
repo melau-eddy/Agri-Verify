@@ -82,7 +82,7 @@ def get_grok_response(user_message, context):
             json={
                 "model": "llama-3.3-70b-versatile",  # Or whatever model name Grok uses
                 "messages": messages,
-                "temperature": 0.9,
+                "temperature": 1.9,
                 "max_tokens": 300,
                 "top_p": 0.9,
             },
