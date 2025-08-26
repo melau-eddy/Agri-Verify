@@ -80,10 +80,10 @@ def get_grok_response(user_message, context):
                 "Content-Type": "application/json"
             },
             json={
-                "model": "llama-3.1-8b-instant",  # Or whatever model name Grok uses
+                "model": "qwen/qwen3-32b",  # Or whatever model name Grok uses
                 "messages": messages,
-                "temperature": 0.7,
-                "max_tokens": 500,
+                "temperature": 0.9,
+                "max_tokens": 300,
                 "top_p": 0.9,
             },
             timeout=15  # Slightly longer timeout for Grok
