@@ -14,86 +14,9 @@ from django.views.decorators.csrf import csrf_exempt
 import openai
 from django.views.generic import DetailView
 import requests  
-from base.gmo_knowledge import GMO_KNOWLEDGE
-import re
-import difflib
 
 
 
-
-
-import google.generativeai as genai
-
-def get_gemini_response(user_message, context):
-    """
-    Get a response from Gemini API (English + Swahili support).
-    """
-    try:
-        # Configure the API client
-        genai.configure(api_key="AIzaSyDHnnLqJeAoPvJTlfap_N0QMz8_ISI7XsI")
-
-        # Choose model (Gemini 1.5 Flash = free, fast; Gemini 1.5 Pro = bigger)
-        model = genai.GenerativeModel("gemini-2.5-flash")
-
-        # Build system + user instruction
-        system_instruction = (
-            "You are an expert on GMOs and agricultural biotechnology. "
-            "Provide accurate, science-based answers about genetically modified organisms, "
-            "agriculture, and related regulations. "
-            "You must support both English and Swahili conversations. "
-            "If the user speaks in Swahili, respond fully in Swahili. "
-            "If the user speaks in English, respond in English."
-        )
-
-        # Combine into a conversation
-        prompt = f"{system_instruction}\n\nUser: {user_message}"
-
-        # Call Gemini
-        response = model.generate_content(prompt)
-
-        # Extract text safely
-        answer = response.text if response and response.text else "No answer found."
-
-        # Update context
-        new_context = {
-            "last_topic": str(user_message[:50])
-        }
-
-        return {
-            "answer": str(answer),
-            "context": new_context,
-            "confidence": 0.9
-        }
-
-    except Exception as e:
-        return {
-            "answer": f"Gemini API Error: {str(e)}",
-            "context": {},
-            "confidence": 0.1
-        }
-
-
-def find_gmo_answer(user_input: str) -> dict | None:
-    """
-    Search GMO_KNOWLEDGE for a match (English or Swahili).
-    Uses fuzzy matching to handle natural questions.
-    """
-    text = user_input.lower()
-
-    for topic, data in GMO_KNOWLEDGE.items():
-        # Combine English + Swahili patterns
-        all_patterns = data.get("patterns", []) + data.get("patterns_sw", [])
-
-        # Find best fuzzy match
-        best_match = difflib.get_close_matches(text, all_patterns, n=1, cutoff=0.6)
-        if best_match:
-            # Decide language based on match
-            if best_match[0] in data.get("patterns_sw", []):
-                return {"answer": data.get("answer_sw"), "topic": topic}
-            else:
-                return {"answer": data.get("answer_en"), "topic": topic}
-
-    return None
 
 
 
@@ -133,7 +56,6 @@ def dashboard(request):
         'page_obj': page_obj,
     }
     return render(request, 'dashboard.html', context)
-
 
 def get_grok_response(user_message, context):
     """
@@ -216,22 +138,7 @@ def chat_api(request):
                 return JsonResponse({"error": "Empty message"}, status=400)
 
             # Get Grok's response
-            # result = get_grok_response(user_message, context)
-            # result = get_gemini_response(user_message, context)
-
-            # 1. Try knowledge base first
-            print(user_message)
-            kb_result = find_gmo_answer(user_message)
-            if kb_result:
-                result = {
-                    "answer": kb_result["answer"],
-                    "context": {"last_topic": kb_result["topic"]},
-                    "confidence": 1.0
-                }
-            else:
-                # 2. Fall back to Gemini if not found in KB
-                result = get_gemini_response(user_message, context)
-
+            result = get_grok_response(user_message, context)
 
             # Save to database
             chat_msg = ChatMessage.objects.create(
@@ -274,7 +181,7 @@ def get_related_suggestions(user_message):
     Generate context-aware suggestions based on user message.
     """
     suggestions = [
-        "GMO regulations",
+        "GMO regulations in my country",
         "How to verify GMO products",
         "Benefits of GMO crops",
         "Safety of genetically modified foods"
