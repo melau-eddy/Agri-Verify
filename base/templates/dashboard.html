@@ -67,9 +67,9 @@
                 
                 <!-- Quick Suggestions -->
                 <div class="flex flex-wrap gap-2 mb-6 pl-11" id="suggestions">
-                    <button onclick="sendSuggestion('GMO regulations in my area')" class="bg-white border border-gray-200 hover:border-primary text-gray-700 px-3 py-1.5 rounded-full text-sm !rounded-button whitespace-nowrap">GMO regulations</button>
+                    <button onclick="sendSuggestion('GMO regulations')" class="bg-white border border-gray-200 hover:border-primary text-gray-700 px-3 py-1.5 rounded-full text-sm !rounded-button whitespace-nowrap">GMO regulations</button>
                     <button onclick="sendSuggestion('How to verify seed authenticity')" class="bg-white border border-gray-200 hover:border-primary text-gray-700 px-3 py-1.5 rounded-full text-sm !rounded-button whitespace-nowrap">Verify seeds</button>
-                    <button onclick="sendSuggestion('Benefits of GMO corn')" class="bg-white border border-gray-200 hover:border-primary text-gray-700 px-3 py-1.5 rounded-full text-sm !rounded-button whitespace-nowrap">GMO benefits</button>
+                    <button onclick="sendSuggestion('GMO benefits')" class="bg-white border border-gray-200 hover:border-primary text-gray-700 px-3 py-1.5 rounded-full text-sm !rounded-button whitespace-nowrap">GMO benefits</button>
                 </div>
             </div>
             
@@ -175,10 +175,31 @@
 // Local response handling functions
 function tryLocalResponse(message, context) {
     const commonQuestions = {
-        "hello": { answer: "Hello! How can I help you with GMO information today?", context: {} },
-        "hi": { answer: "Hi there! Ask me anything about genetically modified organisms.", context: {} },
-        "thanks": { answer: "You're welcome! Let me know if you have any other GMO questions.", context: {} }
-    };
+    "hello": { 
+        answer: "Hello! How can I help you with GMO information today?", 
+        context: {} 
+    },
+    "habari": {
+        answer: "Habari! Ninaweza kukusaidia vipi na taarifa za GMO leo?",
+        context: {} 
+    },
+    "hi": { 
+        answer: "Hi thereu! Ask me anything about genetically modified organisms.", 
+        context: {} 
+    },
+    "hujambo": {
+        answer: "Hujambo! Uliza chochote kuhusu viumbe vilivyobadilishwa vinasaba (GMO).",
+        context: {} 
+    },
+    "thanks": { 
+        answer: "You're welcome! Let me know if you have any other GMO questions.", 
+        context: {} 
+    },
+    "asante": {
+        answer: "Karibu! Nijulishe kama una maswali mengine kuhusu GMO.",
+        context: {} 
+    }
+};
     
     const lowerMsg = message.toLowerCase();
     if (commonQuestions[lowerMsg]) {
