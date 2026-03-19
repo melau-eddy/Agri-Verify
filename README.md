@@ -1,4 +1,4 @@
-      # 🌱 AgriVerify - GMO Information & Verification Portal 
+     # 🌱 AgriVerify - GMO Information & Verification Portal 
 
 ![AgriVerify Banner](agriverify.png) 
 
